@@ -1,1 +1,30 @@
+name: Automotive24 Scraper
 
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  scraper:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Python instellen
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Libraries installeren
+        run: pip install -r requirements.txt
+
+      - name: Scraper uitvoeren
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+          MOLLIE_API_KEY: ${{ secrets.MOLLIE_API_KEY }}
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          APP_URL: ${{ secrets.APP_URL }}
+          APP_SECRET: ${{ secrets.APP_SECRET }}
+        run: python scraper.py
