@@ -1,3 +1,4 @@
+app = FastAPI(title="Automotive24 API")
 from fastapi import FastAPI, HTTPException, Request, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from supabase import create_client
