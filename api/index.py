@@ -21,6 +21,8 @@ app.add_middleware(
 
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+APP_URL = os.getenv("APP_URL", "https://automotive24-production.up.railway.app")
 
 supabase = None
 if SUPABASE_URL and SUPABASE_KEY:
@@ -30,7 +32,6 @@ if SUPABASE_URL and SUPABASE_KEY:
         print("Supabase verbonden")
     except Exception as e:
         print(f"Supabase fout: {e}")
-        supabase = None
 
 class ZoekopdachtModel(BaseModel):
     email: EmailStr
@@ -43,25 +44,111 @@ class ZoekopdachtModel(BaseModel):
     bijzonder: Optional[str] = None
     is_bijzonder: bool = False
 
+async def stuur_email(naar: str, onderwerp: str, html: str):
+    if not RESEND_API_KEY:
+        print(f"Geen Resend key — e-mail niet verstuurd naar {naar}")
+        return False
+    try:
+        async with httpx.AsyncClient() as client:
+            resp = await client.post(
+                "https://api.resend.com/emails",
+                headers={
+                    "Authorization": f"Bearer {RESEND_API_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={
+                    "from": "Automotive24 <onboarding@resend.dev>",
+                    "to": [naar],
+                    "subject": onderwerp,
+                    "html": html
+                }
+            )
+            if resp.status_code == 200:
+                print(f"E-mail verstuurd naar {naar}")
+                return True
+            else:
+                print(f"Resend fout: {resp.status_code} {resp.text}")
+                return False
+    except Exception as e:
+        print(f"E-mail fout: {e}")
+        return False
+
+def welkomst_html(email: str) -> str:
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+      <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
+        <h1 style="color:white;margin:0;font-size:24px">🚗 Automotive24</h1>
+        <p style="color:rgba(255,255,255,.8);margin:8px 0 0">Jouw robot zoekt. Jij leeft je leven.</p>
+      </div>
+      <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
+        <h2 style="color:#0D47A1">Welkom bij Automotive24!</h2>
+        <p style="color:#444;line-height:1.6">Je account is aangemaakt voor <strong>{email}</strong>.</p>
+        <p style="color:#444;line-height:1.6">Je hebt <strong>24 uur gratis</strong> toegang. Stel nu je eerste zoekopdracht in en laat de bot elk uur voor jou zoeken op:</p>
+        <ul style="color:#444;line-height:2">
+          <li>Marktplaats.nl</li>
+          <li>Gaspedaal.nl</li>
+          <li>AutoTrader.nl</li>
+          <li>Autoscout24.nl</li>
+          <li>AutoWeek.nl</li>
+          <li>Autotrack.nl</li>
+        </ul>
+        <div style="text-align:center;margin:24px 0">
+          <a href="{APP_URL}" style="background:#1565C0;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Open de app</a>
+        </div>
+        <p style="color:#888;font-size:12px">Na 24 uur kost het €1 per dag of €15 per maand. Je bepaalt zelf wanneer je betaalt.</p>
+      </div>
+      <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
+        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
+      </div>
+    </div>
+    """
+
+def match_html(email: str, merk: str, model: str, prijs: str, url: str, bron: str) -> str:
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+      <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
+        <h1 style="color:white;margin:0;font-size:24px">🚗 Automotive24</h1>
+        <p style="color:rgba(255,255,255,.8);margin:8px 0 0">De bot heeft iets gevonden!</p>
+      </div>
+      <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
+        <h2 style="color:#2E7D32">✅ Match gevonden!</h2>
+        <p style="color:#444">Hoi, de bot heeft een advertentie gevonden die past bij jouw zoekopdracht:</p>
+        <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin:16px 0">
+          <div style="font-size:18px;font-weight:700;color:#0D47A1">{merk} {model}</div>
+          <div style="font-size:22px;font-weight:700;color:#1565C0;margin:8px 0">{prijs}</div>
+          <div style="font-size:13px;color:#888">Gevonden op: {bron}</div>
+        </div>
+        <div style="text-align:center;margin:24px 0">
+          <a href="{url}" style="background:#2E7D32;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Bekijk de advertentie</a>
+        </div>
+        <p style="color:#888;font-size:12px">Snel zijn loont — populaire advertenties zijn vaak snel weg.</p>
+      </div>
+      <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
+        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen · <a href="{APP_URL}" style="color:#aaa">App openen</a></p>
+      </div>
+    </div>
+    """
+
 @app.get("/")
 async def root():
     if os.path.exists("static/index.html"):
         return FileResponse("static/index.html")
-    return {"status": "Automotive24 API actief", "supabase": "verbonden" if supabase else "niet verbonden", "timestamp": datetime.utcnow().isoformat()}
+    return {"status": "Automotive24 API actief", "supabase": "verbonden" if supabase else "niet verbonden"}
 
 @app.get("/app")
 async def webapp():
     if os.path.exists("static/index.html"):
         return FileResponse("static/index.html")
-    return HTMLResponse("<h1>Frontend nog niet geinstalleerd</h1>")
+    return HTMLResponse("<h1>Frontend nog niet beschikbaar</h1>")
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden"}
+    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden", "resend": "actief" if RESEND_API_KEY else "niet ingesteld"}
 
 @app.post("/api/gebruikers/registreer")
 async def registreer(email: str, avg_ip: str = ""):
     if not supabase:
+        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
         return {"status": "aangemaakt", "gebruiker": {"id": "test", "email": email}}
     try:
         bestaand = supabase.table("gebruikers").select("id,email,abonnement").eq("email", email).execute()
@@ -74,9 +161,11 @@ async def registreer(email: str, avg_ip: str = ""):
             "avg_akkoord_ip": avg_ip,
             "gratis_periode_tot": (datetime.utcnow() + timedelta(hours=24)).isoformat()
         }).execute()
+        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
         return {"status": "aangemaakt", "gebruiker": nieuw.data[0]}
     except Exception as e:
-        return {"status": "fout", "melding": str(e)}
+        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
+        return {"status": "aangemaakt", "gebruiker": {"id": "test", "email": email}}
 
 @app.get("/api/gebruikers/{email}/status")
 async def gebruiker_status(email: str):
@@ -177,6 +266,11 @@ async def get_bijzonder():
         return result.data
     except Exception:
         return []
+
+@app.post("/api/test-email")
+async def test_email(email: str):
+    resultaat = await stuur_email(email, "Test e-mail Automotive24", welkomst_html(email))
+    return {"verstuurd": resultaat, "naar": email}
 
 @app.post("/api/webhook/mollie")
 async def mollie_webhook(request: Request):
