@@ -7,7 +7,7 @@ load_dotenv()
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-APP_URL = os.getenv("APP_URL", "https://automotive24-production.up.railway.app")
+APP_URL = os.getenv("APP_URL", "https://automotive24.nl")
 
 def supabase_request(method, path, data=None):
     headers = {
@@ -17,14 +17,31 @@ def supabase_request(method, path, data=None):
         "Prefer": "return=representation"
     }
     url = f"{SUPABASE_URL}/rest/v1/{path}"
-    with httpx.Client(timeout=30) as client:
-        if method == "GET":
-            r = client.get(url, headers=headers)
-        elif method == "POST":
-            r = client.post(url, headers=headers, json=data)
-        elif method == "PATCH":
-            r = client.patch(url, headers=headers, json=data)
-        return r.json() if r.status_code < 300 else []
+    try:
+        with httpx.Client(timeout=30) as client:
+            if method == "GET":
+                r = client.get(url, headers=headers)
+            elif method == "POST":
+                r = client.post(url, headers=headers, json=data)
+            elif method == "PATCH":
+                r = client.patch(url, headers=headers, json=data)
+            if r.status_code >= 300:
+                print(f"Supabase fout [{r.status_code}] op {path}: {r.text}")
+                return []
+            return r.json()
+    except Exception as e:
+        print(f"Supabase request fout: {e}")
+        return []
+
+def prijs_naar_int(prijs_str):
+    """Converteert prijsstring naar integer (euros). Bijv '€11.499' -> 11499"""
+    if not prijs_str:
+        return None
+    try:
+        cleaned = re.sub(r'[^\d]', '', str(prijs_str))
+        return int(cleaned) if cleaned else None
+    except:
+        return None
 
 def stuur_email(naar, onderwerp, html):
     if not RESEND_API_KEY:
@@ -101,14 +118,16 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                 for item in listings[:10]:
                     titel = item.get("title", "")
                     prijs_data = item.get("priceInfo", {})
-                    prijs = prijs_data.get("priceCents", 0)
-                    prijs_str = f"€{prijs//100:,}".replace(",", ".") if prijs else "Vraagprijs onbekend"
+                    prijs_cents = prijs_data.get("priceCents", 0)
+                    prijs_int = prijs_cents // 100 if prijs_cents else None
+                    prijs_tekst = f"€{prijs_int:,}".replace(",", ".") if prijs_int else "Vraagprijs onbekend"
                     item_id = item.get("itemId", "")
                     adv_url = f"https://www.marktplaats.nl/a/{item_id}" if item_id else ""
                     if titel and adv_url:
                         resultaten.append({
                             "titel": titel,
-                            "prijs": prijs_str,
+                            "prijs": prijs_int,
+                            "prijs_tekst": prijs_tekst,
                             "url": adv_url,
                             "bron": "Marktplaats.nl",
                             "extern_id": f"mp_{item_id}"
@@ -141,12 +160,14 @@ def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                 items = re.findall(r'"url":"(/auto/[^"]+)".*?"price":"([^"]+)".*?"title":"([^"]+)"', html)
                 for item in items[:10]:
                     adv_url = f"https://www.autoscout24.nl{item[0]}"
-                    prijs = item[1]
+                    prijs_tekst = item[1]
+                    prijs_int = prijs_naar_int(prijs_tekst)
                     titel = item[2]
                     extern_id = f"as24_{item[0].replace('/', '_')}"
                     resultaten.append({
                         "titel": titel,
-                        "prijs": prijs,
+                        "prijs": prijs_int,
+                        "prijs_tekst": prijs_tekst,
                         "url": adv_url,
                         "bron": "Autoscout24.nl",
                         "extern_id": extern_id
@@ -158,7 +179,6 @@ def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
 def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
     resultaten = []
     try:
-        query = f"{merk} {model}".strip()
         url = f"https://www.gaspedaal.nl/{normaliseer_merk(merk).replace(' ', '-')}"
         if model:
             url += f"/{model.lower().replace(' ', '-')}"
@@ -177,11 +197,13 @@ def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
                 titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
                 for i, link in enumerate(links[:8]):
                     extern_id = f"gp_{link.split('/')[-1]}"
-                    prijs = f"€{prijzen[i]}" if i < len(prijzen) else "Prijs onbekend"
-                    titel = titels[i].strip() if i < len(titels) else query
+                    prijs_tekst = f"€{prijzen[i]}" if i < len(prijzen) else "Prijs onbekend"
+                    prijs_int = prijs_naar_int(prijs_tekst)
+                    titel = titels[i].strip() if i < len(titels) else f"{merk} {model}"
                     resultaten.append({
                         "titel": titel,
-                        "prijs": prijs,
+                        "prijs": prijs_int,
+                        "prijs_tekst": prijs_tekst,
                         "url": link,
                         "bron": "Gaspedaal.nl",
                         "extern_id": extern_id
@@ -210,26 +232,36 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
         bestaand = supabase_request("GET", f"advertenties?extern_id=eq.{r['extern_id']}&zoekopdracht_id=eq.{zoek['id']}")
         if bestaand:
             continue
-        supabase_request("POST", "advertenties", {
+
+        insert_data = {
             "zoekopdracht_id": zoek["id"],
             "titel": r["titel"],
-            "prijs": r["prijs"],
+            "prijs": r.get("prijs"),          # integer of None
             "url": r["url"],
             "bron": r["bron"],
             "extern_id": r["extern_id"],
             "status": "actief",
             "gevonden_op": datetime.utcnow().isoformat()
-        })
-        nieuwe_matches += 1
-        print(f"Nieuwe match: {r['titel']} — {r['prijs']} op {r['bron']}")
-        if gebruiker_email:
-            merk = zoek.get("merk", "")
-            model = zoek.get("type_model", "")
-            stuur_email(
-                gebruiker_email,
-                f"Match gevonden: {merk} {model}",
-                match_html(merk, model, r["prijs"], r["url"], r["bron"])
-            )
+        }
+        # Verwijder None-waarden om NOT NULL conflicten te vermijden
+        insert_data = {k: v for k, v in insert_data.items() if v is not None}
+
+        resultaat = supabase_request("POST", "advertenties", insert_data)
+        if resultaat:
+            nieuwe_matches += 1
+            prijs_display = r.get("prijs_tekst", str(r.get("prijs", "onbekend")))
+            print(f"Nieuwe match: {r['titel']} — {prijs_display} op {r['bron']}")
+            if gebruiker_email:
+                merk = zoek.get("merk", "")
+                model = zoek.get("type_model", "")
+                stuur_email(
+                    gebruiker_email,
+                    f"Match gevonden: {merk} {model}",
+                    match_html(merk, model, prijs_display, r["url"], r["bron"])
+                )
+        else:
+            print(f"Insert mislukt voor: {r['titel']}")
+
     return nieuwe_matches
 
 def run_scraper():
