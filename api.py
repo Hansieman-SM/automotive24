@@ -409,3 +409,6 @@ httpx==0.27.0
 python-dotenv==1.0.1
 pydantic[email]==2.7.1
 python-multipart==0.0.9
+# Vercel handler
+from mangum import Mangum
+handler = Mangum(app)
