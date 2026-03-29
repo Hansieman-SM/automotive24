@@ -1,240 +1,275 @@
-import httpx, asyncio, hashlib, os, re
-from supabase import create_client
+import os, httpx, asyncio, re
 from datetime import datetime
 from dotenv import load_dotenv
 
 load_dotenv()
 
-supabase = create_client(
-    os.getenv("SUPABASE_URL"),
-    os.getenv("SUPABASE_SERVICE_KEY")
-)
+SUPABASE_URL = os.getenv("SUPABASE_URL", "")
+SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
+RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
+APP_URL = os.getenv("APP_URL", "https://automotive24-production.up.railway.app")
 
-# ─────────────────────────────────────────
-# NORMALISATIE — voorkomt 530i vs 530d fouten
-# ─────────────────────────────────────────
+def supabase_request(method, path, data=None):
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {SUPABASE_KEY}",
+        "Content-Type": "application/json",
+        "Prefer": "return=representation"
+    }
+    url = f"{SUPABASE_URL}/rest/v1/{path}"
+    with httpx.Client(timeout=30) as client:
+        if method == "GET":
+            r = client.get(url, headers=headers)
+        elif method == "POST":
+            r = client.post(url, headers=headers, json=data)
+        elif method == "PATCH":
+            r = client.patch(url, headers=headers, json=data)
+        return r.json() if r.status_code < 300 else []
 
-def normaliseer_model(tekst: str) -> str:
-    if not tekst:
+def stuur_email(naar, onderwerp, html):
+    if not RESEND_API_KEY:
+        return
+    try:
+        with httpx.Client(timeout=15) as client:
+            client.post(
+                "https://api.resend.com/emails",
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                json={"from": "Automotive24 <onboarding@resend.dev>", "to": [naar], "subject": onderwerp, "html": html}
+            )
+    except Exception as e:
+        print(f"E-mail fout: {e}")
+
+def match_html(merk, model, prijs, url, bron):
+    return f"""
+    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
+      <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
+        <h1 style="color:white;margin:0">🚗 Automotive24</h1>
+        <p style="color:rgba(255,255,255,.8);margin:8px 0 0">De bot heeft iets gevonden!</p>
+      </div>
+      <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
+        <h2 style="color:#2E7D32">Match gevonden!</h2>
+        <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin:16px 0">
+          <div style="font-size:18px;font-weight:700;color:#0D47A1">{merk} {model}</div>
+          <div style="font-size:22px;font-weight:700;color:#1565C0;margin:8px 0">{prijs}</div>
+          <div style="font-size:13px;color:#888">Gevonden op: {bron}</div>
+        </div>
+        <div style="text-align:center;margin:24px 0">
+          <a href="{url}" style="background:#2E7D32;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600">Bekijk de advertentie</a>
+        </div>
+      </div>
+      <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
+        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
+      </div>
+    </div>
+    """
+
+def normaliseer_merk(merk):
+    if not merk:
         return ""
-    tekst = tekst.lower().strip()
-    tekst = re.sub(r'\s+', ' ', tekst)
-    tekst = tekst.replace(" i ", "i ").replace("-i ", "i ")
-    return tekst
+    merk = merk.strip().lower()
+    mapping = {
+        "vw": "volkswagen", "mercedes": "mercedes-benz", "merc": "mercedes-benz",
+        "bmw": "bmw", "audi": "audi", "ford": "ford", "opel": "opel",
+        "toyota": "toyota", "honda": "honda", "renault": "renault",
+        "peugeot": "peugeot", "citroen": "citroën", "citroën": "citroën",
+        "skoda": "skoda", "seat": "seat", "kia": "kia", "hyundai": "hyundai",
+        "nissan": "nissan", "mazda": "mazda", "volvo": "volvo", "fiat": "fiat",
+        "dacia": "dacia", "mitsubishi": "mitsubishi", "suzuki": "suzuki",
+        "porsche": "porsche", "land rover": "land rover", "jaguar": "jaguar",
+        "alfa romeo": "alfa romeo", "tesla": "tesla"
+    }
+    return mapping.get(merk, merk)
 
-def match_zoek(adv: dict, zoek: dict) -> bool:
-    if zoek.get("merk"):
-        if zoek["merk"].lower() not in adv.get("titel","").lower():
-            return False
-    if zoek.get("type_model"):
-        zoek_model = normaliseer_model(zoek["type_model"])
-        adv_titel = normaliseer_model(adv.get("titel",""))
-        if zoek_model not in adv_titel:
-            return False
-    if zoek.get("bouwjaar_van") and adv.get("bouwjaar"):
-        if adv["bouwjaar"] < zoek["bouwjaar_van"]:
-            return False
-    if zoek.get("bouwjaar_tot") and adv.get("bouwjaar"):
-        if adv["bouwjaar"] > zoek["bouwjaar_tot"]:
-            return False
-    if zoek.get("brandstof") and adv.get("brandstof"):
-        if zoek["brandstof"].lower() != adv["brandstof"].lower():
+def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
+    resultaten = []
+    try:
+        params = {"query": f"{merk} {model}".strip(), "categoryId": "91", "l1CategoryId": "91"}
+        if bouwjaar_van:
+            params["constructionYearFrom"] = str(bouwjaar_van)
+        if bouwjaar_tot:
+            params["constructionYearTo"] = str(bouwjaar_tot)
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "application/json"
+        }
+        url = "https://www.marktplaats.nl/lrp/api/search"
+        with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as client:
+            r = client.get(url, params=params)
+            if r.status_code == 200:
+                data = r.json()
+                listings = data.get("listings", [])
+                for item in listings[:10]:
+                    titel = item.get("title", "")
+                    prijs_data = item.get("priceInfo", {})
+                    prijs = prijs_data.get("priceCents", 0)
+                    prijs_str = f"€{prijs//100:,}".replace(",", ".") if prijs else "Vraagprijs onbekend"
+                    item_id = item.get("itemId", "")
+                    adv_url = f"https://www.marktplaats.nl/a/{item_id}" if item_id else ""
+                    if titel and adv_url:
+                        resultaten.append({
+                            "titel": titel,
+                            "prijs": prijs_str,
+                            "url": adv_url,
+                            "bron": "Marktplaats.nl",
+                            "extern_id": f"mp_{item_id}"
+                        })
+    except Exception as e:
+        print(f"Marktplaats fout: {e}")
+    return resultaten
+
+def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
+    resultaten = []
+    try:
+        merk_slug = normaliseer_merk(merk).replace(" ", "-").replace("ë", "e")
+        params = {"make": merk_slug, "sort": "standard", "desc": "0", "ustate": "N,U", "size": "10", "page": "1", "cy": "NL", "atype": "C"}
+        if model:
+            params["model"] = model.lower().replace(" ", "-")
+        if bouwjaar_van:
+            params["fregfrom"] = f"{bouwjaar_van}-01"
+        if bouwjaar_tot:
+            params["fregto"] = f"{bouwjaar_tot}-12"
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "application/json",
+            "Accept-Language": "nl-NL,nl;q=0.9"
+        }
+        url = "https://www.autoscout24.nl/lst"
+        with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as client:
+            r = client.get(url, params=params)
+            if r.status_code == 200:
+                html = r.text
+                items = re.findall(r'"url":"(/auto/[^"]+)".*?"price":"([^"]+)".*?"title":"([^"]+)"', html)
+                for item in items[:10]:
+                    adv_url = f"https://www.autoscout24.nl{item[0]}"
+                    prijs = item[1]
+                    titel = item[2]
+                    extern_id = f"as24_{item[0].replace('/', '_')}"
+                    resultaten.append({
+                        "titel": titel,
+                        "prijs": prijs,
+                        "url": adv_url,
+                        "bron": "Autoscout24.nl",
+                        "extern_id": extern_id
+                    })
+    except Exception as e:
+        print(f"Autoscout24 fout: {e}")
+    return resultaten
+
+def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
+    resultaten = []
+    try:
+        query = f"{merk} {model}".strip()
+        url = f"https://www.gaspedaal.nl/{normaliseer_merk(merk).replace(' ', '-')}"
+        if model:
+            url += f"/{model.lower().replace(' ', '-')}"
+        params = {}
+        if bouwjaar_van:
+            params["bouwjaar_van"] = str(bouwjaar_van)
+        if bouwjaar_tot:
+            params["bouwjaar_tot"] = str(bouwjaar_tot)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as client:
+            r = client.get(url, params=params)
+            if r.status_code == 200:
+                html = r.text
+                links = re.findall(r'href="(https://www\.gaspedaal\.nl/[^"]+/[0-9]+)"', html)
+                prijzen = re.findall(r'€\s*([\d\.]+)', html)
+                titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
+                for i, link in enumerate(links[:8]):
+                    extern_id = f"gp_{link.split('/')[-1]}"
+                    prijs = f"€{prijzen[i]}" if i < len(prijzen) else "Prijs onbekend"
+                    titel = titels[i].strip() if i < len(titels) else query
+                    resultaten.append({
+                        "titel": titel,
+                        "prijs": prijs,
+                        "url": link,
+                        "bron": "Gaspedaal.nl",
+                        "extern_id": extern_id
+                    })
+    except Exception as e:
+        print(f"Gaspedaal fout: {e}")
+    return resultaten
+
+def zoek_matcht(zoek, resultaat_titel):
+    titel_lower = resultaat_titel.lower()
+    merk = (zoek.get("merk") or "").lower()
+    model = (zoek.get("type_model") or "").lower()
+    if merk and merk not in titel_lower and normaliseer_merk(merk) not in titel_lower:
+        return False
+    if model:
+        model_woorden = model.split()
+        if not any(w in titel_lower for w in model_woorden if len(w) > 2):
             return False
     return True
 
-def maak_hash(url: str) -> str:
-    return hashlib.sha256(url.encode()).hexdigest()
+def verwerk_resultaten(zoek, resultaten, gebruiker_email):
+    nieuwe_matches = 0
+    for r in resultaten:
+        if not zoek_matcht(zoek, r["titel"]):
+            continue
+        bestaand = supabase_request("GET", f"advertenties?extern_id=eq.{r['extern_id']}&zoekopdracht_id=eq.{zoek['id']}")
+        if bestaand:
+            continue
+        supabase_request("POST", "advertenties", {
+            "zoekopdracht_id": zoek["id"],
+            "titel": r["titel"],
+            "prijs": r["prijs"],
+            "url": r["url"],
+            "bron": r["bron"],
+            "extern_id": r["extern_id"],
+            "status": "actief",
+            "gevonden_op": datetime.utcnow().isoformat()
+        })
+        nieuwe_matches += 1
+        print(f"Nieuwe match: {r['titel']} — {r['prijs']} op {r['bron']}")
+        if gebruiker_email:
+            merk = zoek.get("merk", "")
+            model = zoek.get("type_model", "")
+            stuur_email(
+                gebruiker_email,
+                f"Match gevonden: {merk} {model}",
+                match_html(merk, model, r["prijs"], r["url"], r["bron"])
+            )
+    return nieuwe_matches
 
-# ─────────────────────────────────────────
-# MARKTPLAATS SCRAPER
-# ─────────────────────────────────────────
+def run_scraper():
+    print(f"\n=== Automotive24 Scraper === {datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')} UTC")
+    if not SUPABASE_KEY:
+        print("Geen Supabase key — stop")
+        return
 
-async def scrape_marktplaats(zoek: dict) -> list:
-    params = {"query": f"{zoek.get('merk','')} {zoek.get('type_model','')}".strip()}
-    if zoek.get("bouwjaar_van"):
-        params["yearFrom"] = zoek["bouwjaar_van"]
-    if zoek.get("bouwjaar_tot"):
-        params["yearTo"] = zoek["bouwjaar_tot"]
-
-    url = "https://www.marktplaats.nl/lrp/api/search"
-    headers = {"User-Agent": "Mozilla/5.0 (compatible; Automotive24Bot/1.0)"}
-
-    try:
-        async with httpx.AsyncClient(timeout=10) as client:
-            r = await client.get(url, params=params, headers=headers)
-            data = r.json()
-
-        resultaten = []
-        for item in data.get("listings", [])[:20]:
-            adv = {
-                "titel": item.get("title",""),
-                "prijs": int(item.get("priceInfo",{}).get("priceCents",0)),
-                "url": f"https://www.marktplaats.nl{item.get('vipUrl','')}",
-                "site": "marktplaats",
-                "foto_url": item.get("imageUrls",[""])[0] if item.get("imageUrls") else None,
-                "locatie": item.get("location",{}).get("cityName",""),
-                "bouwjaar": item.get("attributes",{}).get("constructionYear"),
-                "brandstof": None,
-                "km_stand": None,
-                "merk": zoek.get("merk"),
-                "type_model": zoek.get("type_model"),
-            }
-            adv["url_hash"] = maak_hash(adv["url"])
-            if match_zoek(adv, zoek):
-                resultaten.append(adv)
-        return resultaten
-    except Exception as e:
-        print(f"Marktplaats fout: {e}")
-        return []
-
-# ─────────────────────────────────────────
-# LIVENESS CHECK VOOR BESTAANDE ADVERTENTIES
-# ─────────────────────────────────────────
-
-async def check_bestaande_advertenties():
-    actief = supabase.table("advertenties")\
-        .select("id,url")\
-        .eq("status", "actief").execute()
-
-    verkocht_signalen = [
-        "niet meer beschikbaar", "advertentie verlopen",
-        "deze auto is verkocht", "sold", "verwijderd"
-    ]
-
-    async def check_een(adv):
-        try:
-            async with httpx.AsyncClient(timeout=6, follow_redirects=True) as client:
-                r = await client.get(adv["url"], headers={
-                    "User-Agent": "Mozilla/5.0 (compatible; Automotive24Bot/1.0)"
-                })
-                if r.status_code in [404, 410]:
-                    return adv["id"], "verlopen"
-                if any(s in r.text.lower() for s in verkocht_signalen):
-                    return adv["id"], "verkocht"
-                return adv["id"], "actief"
-        except:
-            return adv["id"], "onzeker"
-
-    taken = [check_een(a) for a in (actief.data or [])]
-    resultaten = await asyncio.gather(*taken)
-
-    for adv_id, status in resultaten:
-        if status != "actief":
-            supabase.table("advertenties").update({
-                "status": status,
-                "verlopen_op": datetime.utcnow().isoformat(),
-                "laatste_check": datetime.utcnow().isoformat()
-            }).eq("id", adv_id).execute()
-            print(f"Advertentie {adv_id} → {status}")
-
-# ─────────────────────────────────────────
-# VERLOPEN LEADS AFHANDELEN
-# ─────────────────────────────────────────
-
-async def verwerk_verlopen_leads():
-    nu = datetime.utcnow().isoformat()
-
-    # Zoeker reageerde niet binnen 24u
-    verlopen = supabase.table("leads")\
-        .select("id,handelaar_id,credit_gereserveerd")\
-        .eq("contact_status", "wacht_op_zoeker")\
-        .lt("reactie_deadline", nu).execute()
-
-    for lead in (verlopen.data or []):
-        supabase.table("leads").update({
-            "contact_status": "verlopen"
-        }).eq("id", lead["id"]).execute()
-        print(f"Lead {lead['id']} verlopen — credit terug")
-
-    # Handelaar bevestigde niet binnen 24u
-    niet_bevestigd = supabase.table("leads")\
-        .select("id,handelaar_id,credit_gereserveerd")\
-        .eq("contact_status", "zoeker_reageerde")\
-        .lt("handelaar_deadline", nu).execute()
-
-    for lead in (niet_bevestigd.data or []):
-        supabase.table("leads").update({
-            "contact_status": "verlopen"
-        }).eq("id", lead["id"]).execute()
-        print(f"Lead {lead['id']} handelaar deadline verlopen")
-
-# ─────────────────────────────────────────
-# PERSOONSDATA WISSEN NA 48U (AVG)
-# ─────────────────────────────────────────
-
-async def wis_persoonsdata():
-    cutoff = (datetime.utcnow() - __import__('datetime').timedelta(hours=48)).isoformat()
-
-    oud = supabase.table("leads")\
-        .select("id")\
-        .eq("persoonsdata_gewist", False)\
-        .lt("zoeker_reageerde_op", cutoff).execute()
-
-    for lead in (oud.data or []):
-        supabase.table("leads").update({
-            "zoeker_naam_enc": None,
-            "zoeker_telefoon_enc": None,
-            "persoonsdata_gewist": True,
-            "persoonsdata_gewist_op": datetime.utcnow().isoformat()
-        }).eq("id", lead["id"]).execute()
-        print(f"Persoonsdata gewist voor lead {lead['id']}")
-
-# ─────────────────────────────────────────
-# HOOFDFUNCTIE
-# ─────────────────────────────────────────
-
-async def main():
-    print(f"Scraper gestart: {datetime.utcnow()}")
-
-    # Check bestaande advertenties
-    await check_bestaande_advertenties()
-
-    # Verwerk verlopen leads
-    await verwerk_verlopen_leads()
-
-    # Wis persoonsdata ouder dan 48u
-    await wis_persoonsdata()
-
-    # Haal actieve zoekopdrachten op
-    zoekopdrachten = supabase.table("zoekopdrachten")\
-        .select("*")\
-        .eq("status", "actief").execute()
-
-    if not zoekopdrachten.data:
+    zoekopdrachten = supabase_request("GET", "zoekopdrachten?status=eq.actief&select=*,gebruikers(email)")
+    if not zoekopdrachten:
         print("Geen actieve zoekopdrachten")
         return
 
-    print(f"{len(zoekopdrachten.data)} actieve zoekopdrachten")
+    print(f"{len(zoekopdrachten)} actieve zoekopdrachten gevonden")
+    totaal_nieuw = 0
 
-    for zoek in zoekopdrachten.data:
-        print(f"Scraping: {zoek.get('merk')} {zoek.get('type_model')}")
-        resultaten = await scrape_marktplaats(zoek)
+    for zoek in zoekopdrachten:
+        merk = zoek.get("merk", "")
+        model = zoek.get("type_model", "")
+        bouwjaar_van = zoek.get("bouwjaar_van")
+        bouwjaar_tot = zoek.get("bouwjaar_tot")
+        brandstof = zoek.get("brandstof")
+        gebruiker_email = None
+        if zoek.get("gebruikers"):
+            gebruiker_email = zoek["gebruikers"].get("email")
 
-        nieuwe = 0
-        for adv in resultaten:
-            bestaand = supabase.table("advertenties")\
-                .select("id")\
-                .eq("zoekopdracht_id", zoek["id"])\
-                .eq("url_hash", adv["url_hash"]).execute()
+        print(f"\nZoeken: {merk} {model} ({bouwjaar_van}–{bouwjaar_tot})")
 
-            if not bestaand.data:
-                supabase.table("advertenties").insert({
-                    **adv,
-                    "zoekopdracht_id": zoek["id"]
-                }).execute()
-                nieuwe += 1
+        alle_resultaten = []
+        alle_resultaten += scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof)
+        alle_resultaten += scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof)
+        alle_resultaten += scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot)
 
-        supabase.table("zoekopdrachten").update({
-            "laatste_scan": datetime.utcnow().isoformat(),
-            "aantal_resultaten": supabase.table("advertenties")
-                .select("id", count="exact")
-                .eq("zoekopdracht_id", zoek["id"])
-                .eq("status", "actief").execute().count
-        }).eq("id", zoek["id"]).execute()
+        print(f"Gevonden: {len(alle_resultaten)} advertenties op 3 sites")
+        nieuw = verwerk_resultaten(zoek, alle_resultaten, gebruiker_email)
+        totaal_nieuw += nieuw
+        print(f"Nieuwe matches opgeslagen: {nieuw}")
 
-        print(f"  → {nieuwe} nieuwe advertenties")
-
-    print(f"Scraper klaar: {datetime.utcnow()}")
+    print(f"\nTotaal nieuwe matches: {totaal_nieuw}")
+    print("=== Scraper klaar ===")
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    run_scraper()
