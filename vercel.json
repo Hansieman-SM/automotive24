@@ -1,26 +1,14 @@
 {
   "version": 2,
-  "builds": [
-    {
-      "src": "api.py",
-      "use": "@vercel/python",
-      "config": {
-        "maxLambdaSize": "15mb"
-      }
+  "functions": {
+    "api.py": {
+      "runtime": "python3.11"
     }
-  ],
+  },
   "routes": [
     {
       "src": "/(.*)",
       "dest": "api.py"
     }
-  ],
-  "env": {
-    "SUPABASE_URL": "@supabase_url",
-    "SUPABASE_SERVICE_KEY": "@supabase_service_key",
-    "MOLLIE_API_KEY": "@mollie_api_key",
-    "RESEND_API_KEY": "@resend_api_key",
-    "APP_URL": "@app_url",
-    "APP_SECRET": "@app_secret"
-  }
+  ]
 }
