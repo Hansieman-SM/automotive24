@@ -1,7 +1,5 @@
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel, EmailStr
-from typing import Optional
 import os, httpx
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
@@ -22,12 +20,13 @@ SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 
 supabase = None
 if SUPABASE_URL and SUPABASE_KEY:
-    from supabase import create_client
     try:
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-except Exception as e:
-    print(f"Supabase fout: {e}")
-    supabase = None
+        from supabase import create_client
+        supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+        print("Supabase verbonden")
+    except Exception as e:
+        print(f"Supabase fout: {e}")
+        supabase = None
 
 @app.get("/")
 async def root():
