@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automotive24 — Jouw robot zoekt. Jij leeft je leven.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#F4F6F9;color:#222;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+
+/* NAV */
+nav{background:#0D47A1;padding:0 16px}
+.nav-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-logo{color:white;font-size:18px;font-weight:600;letter-spacing:.3px}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.6)}
+
+/* TABS */
+.tabs{background:#0D47A1;display:flex;max-width:480px;margin:0 auto}
+.tab{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.tab.active{color:white;border-bottom:3px solid white;font-weight:600}
+
+/* CONTENT */
+.content{max-width:480px;margin:0 auto;padding:14px}
+.card{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:16px;margin-bottom:10px}
+.card-title{font-size:15px;font-weight:600;color:#0D47A1;margin-bottom:3px}
+.card-sub{font-size:12px;color:#888;margin-bottom:14px}
+
+/* FORMS */
+label{display:block;font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;margin-top:10px}
+input,select,textarea{width:100%;padding:10px 12px;border:1px solid #DDD;border-radius:8px;font-size:14px;background:#FAFAFA;color:#222;outline:none}
+input:focus,select:focus{border-color:#1565C0;background:white}
+.btn{width:100%;padding:13px;background:#1565C0;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.btn:hover{background:#1976D2}
+.btn.groen{background:#2E7D32}
+.btn.grijs{background:#eee;color:#555;border:.5px solid #ddd;margin-top:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+/* BADGES */
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-groen{background:#E8F5E9;color:#2E7D32}
+.badge-blauw{background:#E8F0FE;color:#1A3C8F}
+.badge-amber{background:#FFF8E1;color:#7a4f00}
+.badge-rood{background:#FFEBEE;color:#C62828}
+
+/* ADVERTENTIES */
+.adv{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
+.adv-title{font-size:14px;font-weight:600;color:#0D47A1;margin-bottom:3px}
+.adv-detail{font-size:12px;color:#888;margin-bottom:8px}
+.adv-bottom{display:flex;justify-content:space-between;align-items:center}
+.adv-prijs{font-size:16px;font-weight:600;color:#1565C0}
+.adv-btns{display:flex;gap:6px}
+.thumb{width:28px;height:28px;border-radius:50%;border:.5px solid #E0E0E0;background:#F9F9F9;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer}
+.thumb.up.voted{background:#E8F5E9}
+.thumb.down.voted{background:#FFEBEE}
+.bekijk{background:#1565C0;color:white;border:none;border-radius:6px;font-size:11px;padding:5px 10px;cursor:pointer}
+
+/* HOTLIST */
+.hot-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px}
+.hot-rank{font-size:15px;font-weight:700;color:#1565C0;width:22px;flex-shrink:0}
+.hot-rank.top{color:#E65100}
+.hot-body{flex:1}
+.hot-merk{font-size:13px;font-weight:600;color:#222}
+.hot-detail{font-size:11px;color:#888}
+.hot-count{text-align:right}
+.hot-num{font-size:14px;font-weight:700;color:#1565C0}
+.hot-lbl{font-size:9px;color:#aaa}
+
+/* BIJZONDER */
+.bijz{background:white;border-radius:10px;border:.5px solid #D1C4E9;padding:12px;margin-bottom:8px}
+.bijz-title{font-size:13px;font-weight:600;color:#4527A0;margin-bottom:2px}
+.bijz-detail{font-size:11px;color:#888;margin-bottom:6px}
+.bijz-bottom{display:flex;justify-content:space-between;align-items:center}
+.bijz-budget{font-size:12px;font-weight:600;color:#1565C0}
+.bijz-watchers{font-size:10px;color:#aaa}
+
+/* INFO */
+.info-box{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+.info-box.blauw{background:#E8F0FE;color:#1A3C8F;border-left:3px solid #1565C0;border-radius:0 8px 8px 0}
+.info-box.groen{background:#E8F5E9;color:#1B5E20;border-left:3px solid #2E7D32;border-radius:0 8px 8px 0}
+
+/* SITES */
+.sites{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.site-badge{background:#E8F0FE;color:#1A3C8F;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+
+/* ABONNEMENT */
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.plan{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:14px;text-align:center;cursor:pointer;transition:border-color .15s}
+.plan.selected{border:2px solid #1565C0}
+.plan-naam{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.plan-prijs{font-size:28px;font-weight:700;color:#222;line-height:1}
+.plan-per{font-size:12px;color:#888;margin-bottom:8px}
+.plan-feat{font-size:11px;color:#666;text-align:left}
+.plan-feat li{list-style:none;padding:3px 0;border-bottom:.5px solid #F0F0F0}
+.plan-feat li::before{content:'✓ ';color:#2E7D32}
+
+/* ZOEKITEM */
+.zoek-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
+.zoek-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.zoek-merk{font-size:14px;font-weight:600;color:#0D47A1}
+.zoek-detail{font-size:11px;color:#888;margin-top:2px}
+.zoek-count{text-align:right}
+.zoek-num{font-size:22px;font-weight:700;color:#1565C0}
+.zoek-lbl{font-size:9px;color:#aaa}
+.zoek-actions{display:flex;gap:6px;margin-top:8px}
+.btn-sm{flex:1;padding:7px;border:.5px solid #E0E0E0;border-radius:8px;font-size:11px;cursor:pointer;background:#F9F9F9;color:#333}
+.btn-del{background:#FFEBEE;color:#C62828;border:none}
+
+/* DIVIDER */
+.divider{border:none;border-top:.5px solid #EEE;margin:12px 0}
+
+/* SECTION TITLE */
+.sec-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px}
+
+/* ACCOUNT */
+.data-rij{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid #EEE;font-size:13px}
+.data-label{color:#888}
+.data-val{font-weight:600;color:#222}
+.data-val.groen{color:#2E7D32}
+
+/* ONBOARDING */
+.onboard{text-align:center;padding:40px 20px}
+.onboard-icon{font-size:48px;margin-bottom:16px}
+.onboard-title{font-size:22px;font-weight:700;color:#0D47A1;margin-bottom:8px}
+.onboard-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:24px}
+
+/* STATUS BAR */
+.statusbar{background:#0D47A1;padding:10px 16px 0}
+.statusrow{display:flex;justify-content:space-between;font-size:11px;color:rgba(255,255,255,.7);margin-bottom:4px}
+</style>
+</head>
+<body>
+
+<!-- SCHERM 1: WELKOM / LOGIN -->
+<div class="screen active" id="s-welkom">
+  <div style="background:#0D47A1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px">
+    <div style="max-width:380px;margin:0 auto;width:100%">
+      <div style="text-align:center;margin-bottom:40px">
+        <div style="font-size:48px;margin-bottom:12px">🚗</div>
+        <h1 style="color:white;font-size:28px;font-weight:700;margin-bottom:8px">Automotive24</h1>
+        <p style="color:rgba(255,255,255,.7);font-size:15px;line-height:1.6">Jouw robot zoekt.<br>Jij leeft je leven.</p>
+      </div>
+      <div style="background:white;border-radius:16px;padding:24px">
+        <p style="font-size:14px;color:#555;margin-bottom:16px;text-align:center">Voer je e-mailadres in om te beginnen</p>
+        <label>E-mailadres</label>
+        <input type="email" id="login-email" placeholder="jouw@email.nl" />
+        <div style="background:#E8F0FE;border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;color:#1A3C8F">
+          Je ontvangt een magic link — geen wachtwoord nodig
+        </div>
+        <button class="btn" onclick="inloggen()">Doorgaan</button>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#aaa">
+          Eerste 24 uur gratis · Daarna €1/dag of €15/mnd
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHERM 2: HOOFDAPP -->
+<div class="screen" id="s-app">
+  <div style="background:#F4F6F9;min-height:100vh">
+    <div style="background:#0D47A1">
+      <div class="nav-inner">
+        <div>
+          <div class="nav-logo">🚗 Automotive24</div>
+          <div class="nav-sub" id="nav-email">laden...</div>
+        </div>
+        <button onclick="naarAccount()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">Account</button>
+      </div>
+      <div class="tabs" style="max-width:480px;margin:0 auto">
+        <button class="tab active" onclick="showTab('resultaten',this)">Resultaten</button>
+        <button class="tab" onclick="showTab('zoeken',this)">Zoeken</button>
+        <button class="tab" onclick="showTab('hotlist',this)">Hotlist</button>
+        <button class="tab" onclick="showTab('bijzonder',this)">Bijzonder</button>
+      </div>
+    </div>
+
+    <div class="content">
+
+      <!-- RESULTATEN -->
+      <div id="tab-resultaten">
+        <div id="resultaten-list">
+          <div class="onboard">
+            <div class="onboard-icon">🔍</div>
+            <div class="onboard-title">Nog geen zoekopdrachten</div>
+            <div class="onboard-sub">Ga naar "Zoeken" om je eerste zoekopdracht in te stellen. De bot zoekt dan elk uur voor jou.</div>
+            <button class="btn" onclick="showTab('zoeken', document.querySelectorAll('.tab')[1])">Zoekopdracht instellen</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- ZOEKEN -->
+      <div id="tab-zoeken" style="display:none">
+        <div class="card">
+          <div class="card-title">Nieuwe zoekopdracht</div>
+          <div class="card-sub">Meer invullen = nauwkeuriger resultaat</div>
+
+          <label>Merk <span style="color:#aaa;font-weight:400;font-size:10px">optioneel</span></label>
+          <select id="f-merk">
+            <option value="">Alle merken</option>
+            <option>Alfa Romeo</option><option>Audi</option><option>BMW</option><option>Citroën</option>
+            <option>Dacia</option><option>Fiat</option><option>Ford</option><option>Honda</option>
+            <option>Hyundai</option><option>Kia</option><option>Mazda</option><option>Mercedes-Benz</option>
+            <option>Mitsubishi</option><option>Nissan</option><option>Opel</option><option>Peugeot</option>
+            <option>Renault</option><option>Seat</option><option>Skoda</option><option>Suzuki</option>
+            <option>Toyota</option><option>Volkswagen</option><option>Volvo</option>
+          </select>
+
+          <label>Brandstof <span style="color:#aaa;font-weight:400;font-size:10px">optioneel</span></label>
+          <select id="f-brandstof">
+            <option value="">Alle brandstoftypen</option>
+            <option>Benzine</option><option>Diesel</option><option>Elektrisch</option>
+            <option>Hybride</option><option>LPG</option>
+          </select>
+
+          <label>Type / Model <span style="color:#aaa;font-weight:400;font-size:10px">optioneel</span></label>
+          <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, Astra..." />
+
+          <label>Uitvoering <span style="color:#aaa;font-weight:400;font-size:10px">optioneel</span></label>
+          <input type="text" id="f-uitvoering" placeholder="bijv. GTI, 320d, Titanium..." />
+
+          <label>Bouwjaar van / tot</label>
+          <div class="row2">
+            <select id="f-jaar-van"></select>
+            <select id="f-jaar-tot"></select>
+          </div>
+
+          <div class="info-box blauw" style="margin-top:12px">
+            Elk uur scannen we 6 grote autosites. Alleen exacte matches worden getoond.
+          </div>
+
+          <button class="btn" onclick="startZoek()">Zoekopdracht starten</button>
+        </div>
+
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Gescande websites</div>
+          <div class="sites">
+            <span class="site-badge">Marktplaats.nl</span>
+            <span class="site-badge">Gaspedaal.nl</span>
+            <span class="site-badge">AutoTrader.nl</span>
+            <span class="site-badge">Autoscout24.nl</span>
+            <span class="site-badge">AutoWeek.nl</span>
+            <span class="site-badge">Autotrack.nl</span>
+          </div>
+        </div>
+
+        <div id="mijn-zoeken">
+          <div class="sec-title">Mijn zoekopdrachten</div>
+          <div id="zoek-list"></div>
+        </div>
+      </div>
+
+      <!-- HOTLIST -->
+      <div id="tab-hotlist" style="display:none">
+        <div class="sec-title">Top 10 meest gezocht in Nederland</div>
+        <div id="hotlist-list">
+          <div style="text-align:center;padding:30px;color:#aaa;font-size:13px">Hotlist laden...</div>
+        </div>
+        <div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">Realtime bijgewerkt · Klik om te zoeken</div>
+      </div>
+
+      <!-- BIJZONDER -->
+      <div id="tab-bijzonder" style="display:none">
+        <div class="sec-title">Bijzondere zoekopdrachten</div>
+        <div class="info-box blauw">Voor auto's die niet in databases staan — klassiekers, zeldzame modellen, schuurvondsten.</div>
+
+        <div class="bijz">
+          <div class="bijz-title">DeLorean DMC-12</div>
+          <div class="bijz-detail">1981–1982 · Rijdbaar · NL kenteken voorkeur</div>
+          <div class="bijz-bottom">
+            <div class="bijz-budget">Budget: €45.000–€70.000</div>
+            <div class="bijz-watchers">7 zoekers</div>
+          </div>
+        </div>
+        <div class="bijz">
+          <div class="bijz-title">Citroën DS 21 Pallas</div>
+          <div class="bijz-detail">1967–1971 · Goede staat · Gerestaureerd</div>
+          <div class="bijz-bottom">
+            <div class="bijz-budget">Budget: €18.000–€28.000</div>
+            <div class="bijz-watchers">12 zoekers</div>
+          </div>
+        </div>
+        <div class="bijz">
+          <div class="bijz-title">Porsche 944 Turbo</div>
+          <div class="bijz-detail">1987 · Compleet · Project toegestaan</div>
+          <div class="bijz-bottom">
+            <div class="bijz-budget">Budget: €8.000–€15.000</div>
+            <div class="bijz-watchers">18 zoekers</div>
+          </div>
+        </div>
+
+        <button class="btn" style="background:#4527A0" onclick="bijzonderPlaatsen()">+ Bijzondere zoekopdracht plaatsen</button>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- SCHERM 3: ACCOUNT -->
+<div class="screen" id="s-account">
+  <div style="background:#0D47A1;padding:16px">
+    <div style="max-width:480px;margin:0 auto;display:flex;align-items:center;gap:12px">
+      <button onclick="toonApp()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">← Terug</button>
+      <span style="color:white;font-size:16px;font-weight:600">Mijn account</span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="sec-title">Accountgegevens</div>
+      <div class="data-rij"><span class="data-label">E-mailadres</span><span class="data-val" id="acc-email">-</span></div>
+      <div class="data-rij"><span class="data-label">Abonnement</span><span class="data-val groen" id="acc-abo">Gratis periode</span></div>
+      <div class="data-rij"><span class="data-label">Geldig tot</span><span class="data-val" id="acc-tot">-</span></div>
+      <div class="data-rij"><span class="data-label">Zoekopdrachten</span><span class="data-val" id="acc-zoek">0</span></div>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Abonnement verlengen</div>
+      <div class="plan-grid">
+        <div class="plan" id="plan-dag" onclick="selectPlan('dag')">
+          <div class="plan-naam">Dag</div>
+          <div class="plan-prijs">€1</div>
+          <div class="plan-per">per 24 uur</div>
+          <ul class="plan-feat">
+            <li>Alle zoekopdrachten</li>
+            <li>Elk uur scan</li>
+            <li>Dagelijks opzegbaar</li>
+          </ul>
+        </div>
+        <div class="plan selected" id="plan-maand" onclick="selectPlan('maand')">
+          <div class="plan-naam">Maand ⭐</div>
+          <div class="plan-prijs">€15</div>
+          <div class="plan-per">per 30 dagen</div>
+          <ul class="plan-feat">
+            <li>Alle zoekopdrachten</li>
+            <li>Elk uur scan</li>
+            <li>50% korting</li>
+          </ul>
+        </div>
+      </div>
+      <button class="btn groen" onclick="betalen()">Betalen via iDEAL</button>
+    </div>
+
+    <div class="card">
+      <div class="sec-title">Mijn gegevens</div>
+      <button class="btn grijs" onclick="gegevensOpvragen()">Mijn gegevens opvragen (AVG)</button>
+      <button class="btn" style="background:#FFEBEE;color:#C62828;border:none;margin-top:8px" onclick="uitloggen()">Uitloggen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = 'https://automotive24-production.up.railway.app';
+var huidigEmail = localStorage.getItem('a24_email') || '';
+var zoekacties = JSON.parse(localStorage.getItem('a24_zoeken') || '[]');
+var gekozenPlan = 'maand';
+
+function vulJaren() {
+  var vf = document.getElementById('f-jaar-van');
+  var vt = document.getElementById('f-jaar-tot');
+  var nu = new Date().getFullYear();
+  vf.innerHTML = '<option value="">Van (optioneel)</option>';
+  vt.innerHTML = '<option value="">Tot (optioneel)</option>';
+  for (var j = nu; j >= 1940; j--) {
+    vf.innerHTML += '<option value="'+j+'">'+j+'</option>';
+    vt.innerHTML += '<option value="'+j+'">'+j+'</option>';
+  }
+}
+
+function inloggen() {
+  var email = document.getElementById('login-email').value.trim();
+  if (!email || !email.includes('@')) { alert('Vul een geldig e-mailadres in'); return; }
+  huidigEmail = email;
+  localStorage.setItem('a24_email', email);
+  fetch(API + '/api/gebruikers/registreer?email=' + encodeURIComponent(email), {method:'POST'})
+    .then(function(r){ return r.json(); })
+    .catch(function(){ return {}; })
+    .finally(function(){
+      toonApp();
+    });
+}
+
+function toonApp() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-app').classList.add('active');
+  document.getElementById('nav-email').textContent = huidigEmail;
+  renderZoekacties();
+  laadHotlist();
+}
+
+function naarAccount() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-account').classList.add('active');
+  document.getElementById('acc-email').textContent = huidigEmail;
+  document.getElementById('acc-zoek').textContent = zoekacties.length;
+}
+
+function uitloggen() {
+  localStorage.removeItem('a24_email');
+  localStorage.removeItem('a24_zoeken');
+  huidigEmail = '';
+  zoekacties = [];
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-welkom').classList.add('active');
+}
+
+function showTab(name, btn) {
+  ['resultaten','zoeken','hotlist','bijzonder'].forEach(function(t){
+    var el = document.getElementById('tab-'+t);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var tab = document.getElementById('tab-'+name);
+  if (tab) tab.style.display = 'block';
+  if (btn) btn.classList.add('active');
+  if (name === 'hotlist') laadHotlist();
+}
+
+function startZoek() {
+  var merk = document.getElementById('f-merk').value;
+  var brandstof = document.getElementById('f-brandstof').value;
+  var type = document.getElementById('f-type').value;
+  var uitvoering = document.getElementById('f-uitvoering').value;
+  var jaarVan = document.getElementById('f-jaar-van').value;
+  var jaarTot = document.getElementById('f-jaar-tot').value;
+
+  if (!merk && !type) { alert('Vul minimaal een merk of type in'); return; }
+
+  var zoek = {
+    id: Date.now(),
+    merk: merk || 'Alle merken',
+    type: type || '-',
+    brandstof: brandstof || '-',
+    uitvoering: uitvoering || '-',
+    jaarVan: jaarVan,
+    jaarTot: jaarTot,
+    resultaten: 0,
+    status: 'actief'
+  };
+
+  zoekacties.push(zoek);
+  localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
+
+  fetch(API + '/api/zoekopdrachten', {
+    method: 'POST',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify({
+      email: huidigEmail,
+      merk: merk || null,
+      type_model: type || null,
+      brandstof: brandstof ? brandstof.toLowerCase() : null,
+      bouwjaar_van: jaarVan ? parseInt(jaarVan) : null,
+      bouwjaar_tot: jaarTot ? parseInt(jaarTot) : null
+    })
+  }).catch(function(){});
+
+  renderZoekacties();
+  showTab('resultaten', document.querySelectorAll('.tab')[0]);
+  alert('Zoekopdracht gestart! De bot scant elk uur voor jou.');
+}
+
+function renderZoekacties() {
+  var list = document.getElementById('zoek-list');
+  var reslist = document.getElementById('resultaten-list');
+
+  if (!zoekacties.length) {
+    if (reslist) reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">🔍</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar "Zoeken" om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\', document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
+    if (list) list.innerHTML = '';
+    return;
+  }
+
+  var html = zoekacties.map(function(z) {
+    var jaarStr = z.jaarVan && z.jaarTot ? z.jaarVan+'–'+z.jaarTot : z.jaarVan ? 'vanaf '+z.jaarVan : z.jaarTot ? 'tot '+z.jaarTot : 'Alle jaren';
+    return '<div class="zoek-item"><div class="zoek-header"><div><div class="zoek-merk">'+z.merk+' '+z.type+'</div><div class="zoek-detail">'+z.brandstof+' · '+jaarStr+'</div><div style="margin-top:5px"><span class="badge badge-groen">Actief</span></div></div><div class="zoek-count"><div class="zoek-num">'+z.resultaten+'</div><div class="zoek-lbl">resultaten</div></div></div><div class="zoek-actions"><button class="btn-sm" onclick="alert(\'Resultaten worden elk uur gescand en hier getoond.\')">📊 Resultaten</button><button class="btn-sm btn-del" onclick="verwijderZoek('+z.id+')">Verwijderen</button></div></div>';
+  }).join('');
+
+  if (list) list.innerHTML = html;
+
+  var resHtml = '<div class="sec-title" style="margin-bottom:10px">Actieve zoekopdrachten</div>' + zoekacties.map(function(z) {
+    return '<div class="adv"><div class="adv-title">'+z.merk+' '+z.type+'</div><div class="adv-detail">'+z.brandstof+' · Bot scant elk uur alle sites</div><div class="adv-bottom"><div class="adv-prijs" style="font-size:13px;color:#2E7D32">Actief aan het scannen...</div><span class="badge badge-groen">'+z.resultaten+' resultaten</span></div></div>';
+  }).join('');
+  if (reslist) reslist.innerHTML = resHtml;
+}
+
+function verwijderZoek(id) {
+  if (confirm('Zoekopdracht verwijderen?')) {
+    zoekacties = zoekacties.filter(function(z){ return z.id !== id; });
+    localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
+    renderZoekacties();
+  }
+}
+
+function laadHotlist() {
+  var list = document.getElementById('hotlist-list');
+  fetch(API + '/api/hotlist')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      if (!data || !data.length) {
+        var demo = [
+          {merk:'BMW',type_mode
