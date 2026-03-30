@@ -7,16 +7,15 @@
 <style>
 *{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
 body{background:#F4F6F9;color:#222;min-height:100vh}
-.screen{display:none;min-height:100vh}
-.screen.active{display:block}
+.screen{display:none;min-height:100vh}.screen.active{display:block}
 nav{background:#0D47A1;padding:0 16px}
-.nav-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
 .nav-logo{color:white;font-size:18px;font-weight:600}
 .nav-sub{font-size:11px;color:rgba(255,255,255,.6)}
-.tabs{background:#0D47A1;display:flex;max-width:480px;margin:0 auto}
+.tabs{background:#0D47A1;display:flex;max-width:600px;margin:0 auto}
 .tab{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 .tab.active{color:white;border-bottom:3px solid white;font-weight:600}
-.content{max-width:480px;margin:0 auto;padding:14px}
+.content{max-width:600px;margin:0 auto;padding:14px}
 .card{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:16px;margin-bottom:10px}
 .card-title{font-size:15px;font-weight:600;color:#0D47A1;margin-bottom:3px}
 .card-sub{font-size:12px;color:#888;margin-bottom:14px}
@@ -31,11 +30,21 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-groen{background:#E8F5E9;color:#2E7D32}
 .badge-blauw{background:#E8F0FE;color:#1A3C8F}
-.adv{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
-.adv-title{font-size:14px;font-weight:600;color:#0D47A1;margin-bottom:3px}
-.adv-detail{font-size:12px;color:#888;margin-bottom:8px}
-.adv-bottom{display:flex;justify-content:space-between;align-items:center}
-.adv-prijs{font-size:16px;font-weight:600;color:#1565C0}
+.badge-grijs{background:#F5F5F5;color:#666}
+.zoek-blok{background:white;border-radius:12px;border:.5px solid #E0E0E0;margin-bottom:16px;overflow:hidden}
+.zoek-header-blok{background:#0D47A1;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.zoek-naam{color:white;font-size:14px;font-weight:600}
+.zoek-meta{color:rgba(255,255,255,.7);font-size:11px;margin-top:2px}
+.zoek-count{color:white;font-size:20px;font-weight:700;text-align:right}
+.zoek-count-lbl{color:rgba(255,255,255,.7);font-size:9px}
+.adv-item{padding:12px 16px;border-bottom:.5px solid #F0F0F0;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.adv-item:last-child{border-bottom:none}
+.adv-titel{font-size:13px;font-weight:600;color:#222;margin-bottom:3px}
+.adv-meta{font-size:11px;color:#888}
+.adv-prijs{font-size:16px;font-weight:700;color:#1565C0;white-space:nowrap}
+.adv-link{display:inline-block;margin-top:6px;padding:5px 12px;background:#1565C0;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none}
+.adv-link:hover{background:#1976D2}
+.geen-adv{padding:20px 16px;text-align:center;color:#aaa;font-size:13px}
 .hot-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer}
 .hot-rank{font-size:15px;font-weight:700;color:#1565C0;width:22px;flex-shrink:0}
 .hot-rank.top{color:#E65100}
@@ -65,12 +74,10 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .plan-feat li{padding:3px 0;border-bottom:.5px solid #F0F0F0}
 .plan-feat li::before{content:'✓ ';color:#2E7D32}
 .zoek-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
-.zoek-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
-.zoek-merk{font-size:14px;font-weight:600;color:#0D47A1}
-.zoek-detail{font-size:11px;color:#888;margin-top:2px}
-.zoek-num{font-size:22px;font-weight:700;color:#1565C0}
-.zoek-lbl{font-size:9px;color:#aaa;text-align:right}
-.zoek-actions{display:flex;gap:6px;margin-top:8px}
+.zoek-item-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.zoek-item-merk{font-size:14px;font-weight:600;color:#0D47A1}
+.zoek-item-detail{font-size:11px;color:#888;margin-top:2px}
+.zoek-item-actions{display:flex;gap:6px;margin-top:8px}
 .btn-sm{flex:1;padding:7px;border:.5px solid #E0E0E0;border-radius:8px;font-size:11px;cursor:pointer;background:#F9F9F9;color:#333}
 .btn-del{background:#FFEBEE;color:#C62828;border:none}
 .sec-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px}
@@ -82,6 +89,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .onboard-icon{font-size:48px;margin-bottom:16px}
 .onboard-title{font-size:22px;font-weight:700;color:#0D47A1;margin-bottom:8px}
 .onboard-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:24px}
+.laden{text-align:center;padding:30px;color:#aaa;font-size:13px}
 </style>
 </head>
 <body>
@@ -90,14 +98,14 @@ input:focus,select:focus{border-color:#1565C0;background:white}
   <div style="background:#0D47A1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px">
     <div style="max-width:380px;margin:0 auto;width:100%">
       <div style="text-align:center;margin-bottom:40px">
-        <div style="font-size:48px;margin-bottom:12px">🚗</div>
+        <div style="font-size:56px;margin-bottom:12px">🚗</div>
         <h1 style="color:white;font-size:28px;font-weight:700;margin-bottom:8px">Automotive24</h1>
         <p style="color:rgba(255,255,255,.7);font-size:15px;line-height:1.6">Jouw robot zoekt.<br>Jij leeft je leven.</p>
       </div>
       <div style="background:white;border-radius:16px;padding:24px">
         <p style="font-size:14px;color:#555;margin-bottom:16px;text-align:center">Voer je e-mailadres in om te beginnen</p>
         <label>E-mailadres</label>
-        <input type="email" id="login-email" placeholder="jouw@email.nl" />
+        <input type="email" id="login-email" placeholder="jouw@email.nl" onkeydown="if(event.key==='Enter')inloggen()" />
         <div style="background:#E8F0FE;border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;color:#1A3C8F">
           Eerste 24 uur gratis — geen wachtwoord nodig
         </div>
@@ -130,12 +138,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
     <div class="content">
       <div id="tab-resultaten">
         <div id="resultaten-list">
-          <div class="onboard">
-            <div class="onboard-icon">🔍</div>
-            <div class="onboard-title">Nog geen zoekopdrachten</div>
-            <div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen. De bot zoekt dan elk uur voor jou.</div>
-            <button class="btn" onclick="showTab('zoeken',document.querySelectorAll('.tab')[1])">Zoekopdracht instellen</button>
-          </div>
+          <div class="laden">Laden...</div>
         </div>
       </div>
       <div id="tab-zoeken" style="display:none">
@@ -158,15 +161,13 @@ input:focus,select:focus{border-color:#1565C0;background:white}
             <option>Benzine</option><option>Diesel</option><option>Elektrisch</option><option>Hybride</option><option>LPG</option>
           </select>
           <label>Type / Model</label>
-          <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, Astra..."/>
-          <label>Uitvoering</label>
-          <input type="text" id="f-uitvoering" placeholder="bijv. GTI, 320d, Titanium..."/>
+          <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, A6..."/>
           <label>Bouwjaar van / tot</label>
           <div class="row2">
             <select id="f-jaar-van"></select>
             <select id="f-jaar-tot"></select>
           </div>
-          <div class="info-box blauw" style="margin-top:12px">Elk uur scannen we 6 grote autosites. Alleen exacte matches worden getoond.</div>
+          <div class="info-box blauw" style="margin-top:12px">Elk uur scannen we Marktplaats, Gaspedaal en Autoscout24. Alleen exacte matches worden getoond.</div>
           <button class="btn" onclick="startZoek()">Zoekopdracht starten</button>
         </div>
         <div class="card">
@@ -174,10 +175,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
           <div class="sites">
             <span class="site-badge">Marktplaats.nl</span>
             <span class="site-badge">Gaspedaal.nl</span>
-            <span class="site-badge">AutoTrader.nl</span>
             <span class="site-badge">Autoscout24.nl</span>
-            <span class="site-badge">AutoWeek.nl</span>
-            <span class="site-badge">Autotrack.nl</span>
           </div>
         </div>
         <div class="sec-title">Mijn zoekopdrachten</div>
@@ -185,12 +183,11 @@ input:focus,select:focus{border-color:#1565C0;background:white}
       </div>
       <div id="tab-hotlist" style="display:none">
         <div class="sec-title">Top 10 meest gezocht in Nederland</div>
-        <div id="hotlist-list"><div style="text-align:center;padding:30px;color:#aaa;font-size:13px">Laden...</div></div>
-        <div style="font-size:11px;color:#aaa;text-align:center;margin-top:8px">Klik op een auto om direct te zoeken</div>
+        <div id="hotlist-list"><div class="laden">Laden...</div></div>
       </div>
       <div id="tab-bijzonder" style="display:none">
         <div class="sec-title">Bijzondere zoekopdrachten</div>
-        <div class="info-box blauw">Voor klassiekers en zeldzame modellen die niet in databases staan.</div>
+        <div class="info-box blauw">Voor klassiekers en zeldzame modellen die niet in standaard databases staan.</div>
         <div class="bijz"><div class="bijz-title">DeLorean DMC-12</div><div class="bijz-detail">1981–1982 · Rijdbaar · NL kenteken voorkeur</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €45.000–€70.000</div><div class="bijz-watchers">7 zoekers</div></div></div>
         <div class="bijz"><div class="bijz-title">Citroën DS 21 Pallas</div><div class="bijz-detail">1967–1971 · Goede staat · Gerestaureerd</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €18.000–€28.000</div><div class="bijz-watchers">12 zoekers</div></div></div>
         <div class="bijz"><div class="bijz-title">Porsche 944 Turbo</div><div class="bijz-detail">1987 · Compleet · Project toegestaan</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €8.000–€15.000</div><div class="bijz-watchers">18 zoekers</div></div></div>
@@ -202,7 +199,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 
 <div class="screen" id="s-account">
   <div style="background:#0D47A1;padding:16px">
-    <div style="max-width:480px;margin:0 auto;display:flex;align-items:center;gap:12px">
+    <div style="max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px">
       <button onclick="toonApp()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">← Terug</button>
       <span style="color:white;font-size:16px;font-weight:600">Mijn account</span>
     </div>
@@ -211,7 +208,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
     <div class="card">
       <div class="sec-title">Accountgegevens</div>
       <div class="data-rij"><span class="data-label">E-mailadres</span><span class="data-val" id="acc-email">-</span></div>
-      <div class="data-rij"><span class="data-label">Abonnement</span><span class="data-val groen" id="acc-abo">Gratis periode</span></div>
+      <div class="data-rij"><span class="data-label">Abonnement</span><span class="data-val groen">Gratis periode</span></div>
       <div class="data-rij"><span class="data-label">Zoekopdrachten</span><span class="data-val" id="acc-zoek">0</span></div>
     </div>
     <div class="card">
@@ -243,7 +240,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 <script>
 var API = 'https://automotive24-production.up.railway.app';
 var huidigEmail = localStorage.getItem('a24_email') || '';
-var zoekacties = JSON.parse(localStorage.getItem('a24_zoeken') || '[]');
+var dashboardData = [];
 var gekozenPlan = 'maand';
 
 function vulJaren() {
@@ -263,15 +260,15 @@ function inloggen() {
   if (!email || !email.includes('@')) { alert('Vul een geldig e-mailadres in'); return; }
   huidigEmail = email;
   localStorage.setItem('a24_email', email);
-  toonApp();
   fetch(API + '/api/gebruikers/registreer?email=' + encodeURIComponent(email), {method:'POST'}).catch(function(){});
+  toonApp();
 }
 
 function toonApp() {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('s-app').classList.add('active');
   document.getElementById('nav-email').textContent = huidigEmail;
-  renderZoekacties();
+  laadDashboard();
   laadHotlist();
 }
 
@@ -279,14 +276,13 @@ function naarAccount() {
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('s-account').classList.add('active');
   document.getElementById('acc-email').textContent = huidigEmail;
-  document.getElementById('acc-zoek').textContent = zoekacties.length;
+  document.getElementById('acc-zoek').textContent = dashboardData.length;
 }
 
 function uitloggen() {
   localStorage.removeItem('a24_email');
-  localStorage.removeItem('a24_zoeken');
   huidigEmail = '';
-  zoekacties = [];
+  dashboardData = [];
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('s-welkom').classList.add('active');
 }
@@ -301,6 +297,77 @@ function showTab(name, btn) {
   if (tab) tab.style.display = 'block';
   if (btn) btn.classList.add('active');
   if (name === 'hotlist') laadHotlist();
+  if (name === 'zoeken') renderZoekLijst();
+}
+
+function laadDashboard() {
+  var reslist = document.getElementById('resultaten-list');
+  reslist.innerHTML = '<div class="laden">Advertenties laden...</div>';
+  fetch(API + '/api/gebruikers/' + encodeURIComponent(huidigEmail) + '/dashboard')
+    .then(function(r){ return r.json(); })
+    .then(function(data) {
+      dashboardData = data.zoekopdrachten || [];
+      renderResultaten();
+      renderZoekLijst();
+    })
+    .catch(function() {
+      reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">⚠️</div><div class="onboard-title">Kon niet laden</div><div class="onboard-sub">Controleer je verbinding en probeer opnieuw.</div><button class="btn" onclick="laadDashboard()">Opnieuw proberen</button></div>';
+    });
+}
+
+function renderResultaten() {
+  var reslist = document.getElementById('resultaten-list');
+  if (!dashboardData.length) {
+    reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">🔍</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen. De bot zoekt dan elk uur voor jou.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
+    return;
+  }
+  var html = dashboardData.map(function(zoek) {
+    var brandstof = zoek.brandstof || '';
+    var jaren = zoek.bouwjaar_van && zoek.bouwjaar_tot ? zoek.bouwjaar_van+'–'+zoek.bouwjaar_tot : zoek.bouwjaar_van ? 'vanaf '+zoek.bouwjaar_van : zoek.bouwjaar_tot ? 'tot '+zoek.bouwjaar_tot : '';
+    var meta = [brandstof, jaren].filter(Boolean).join(' · ');
+    var advs = zoek.advertenties || [];
+    var advHtml = '';
+    if (!advs.length) {
+      advHtml = '<div class="geen-adv">🔄 Nog geen resultaten — de bot scant elk uur</div>';
+    } else {
+      advHtml = advs.map(function(adv) {
+        var prijs = adv.prijs ? '€' + Number(adv.prijs).toLocaleString('nl-NL') : 'Prijs onbekend';
+        var site = adv.site || '';
+        var datum = adv.gevonden_op ? new Date(adv.gevonden_op).toLocaleDateString('nl-NL') : '';
+        return '<div class="adv-item">' +
+          '<div style="flex:1">' +
+          '<div class="adv-titel">' + (adv.titel || '') + '</div>' +
+          '<div class="adv-meta">' + site + (datum ? ' · ' + datum : '') + '</div>' +
+          '<a href="' + (adv.url || '#') + '" target="_blank" class="adv-link">Bekijk advertentie →</a>' +
+          '</div>' +
+          '<div class="adv-prijs">' + prijs + '</div>' +
+          '</div>';
+      }).join('');
+    }
+    return '<div class="zoek-blok">' +
+      '<div class="zoek-header-blok">' +
+      '<div><div class="zoek-naam">' + (zoek.merk||'') + ' ' + (zoek.type_model||'') + '</div><div class="zoek-meta">' + meta + '</div></div>' +
+      '<div><div class="zoek-count">' + advs.length + '</div><div class="zoek-count-lbl">resultaten</div></div>' +
+      '</div>' +
+      advHtml +
+      '</div>';
+  }).join('');
+  reslist.innerHTML = html;
+}
+
+function renderZoekLijst() {
+  var list = document.getElementById('zoek-list');
+  if (!dashboardData.length) { list.innerHTML = ''; return; }
+  list.innerHTML = dashboardData.map(function(zoek) {
+    var jaren = zoek.bouwjaar_van && zoek.bouwjaar_tot ? zoek.bouwjaar_van+'–'+zoek.bouwjaar_tot : 'Alle jaren';
+    return '<div class="zoek-item">' +
+      '<div class="zoek-item-header">' +
+      '<div><div class="zoek-item-merk">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div><div class="zoek-item-detail">'+(zoek.brandstof||'-')+' · '+jaren+'</div></div>' +
+      '<span class="badge badge-groen">Actief</span>' +
+      '</div>' +
+      '<div class="zoek-item-actions"><button class="btn-sm btn-del" onclick="verwijderZoek(\''+zoek.id+'\')">Verwijderen</button></div>' +
+      '</div>';
+  }).join('');
 }
 
 function startZoek() {
@@ -308,79 +375,68 @@ function startZoek() {
   var type = document.getElementById('f-type').value;
   if (!merk && !type) { alert('Vul minimaal een merk of type in'); return; }
   var brandstof = document.getElementById('f-brandstof').value;
-  var uitvoering = document.getElementById('f-uitvoering').value;
   var jaarVan = document.getElementById('f-jaar-van').value;
   var jaarTot = document.getElementById('f-jaar-tot').value;
-  var zoek = {id:Date.now(), merk:merk||'Alle merken', type:type||'-', brandstof:brandstof||'-', uitvoering:uitvoering||'-', jaarVan:jaarVan, jaarTot:jaarTot, resultaten:0, status:'actief'};
-  zoekacties.push(zoek);
-  localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
-  fetch(API + '/api/zoekopdrachten', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:huidigEmail, merk:merk||null, type_model:type||null, brandstof:brandstof?brandstof.toLowerCase():null, bouwjaar_van:jaarVan?parseInt(jaarVan):null, bouwjaar_tot:jaarTot?parseInt(jaarTot):null})}).catch(function(){});
-  renderZoekacties();
-  showTab('resultaten', document.querySelectorAll('.tab')[0]);
-  alert('Zoekopdracht gestart! De bot scant elk uur voor jou.');
-}
-
-function renderZoekacties() {
-  var list = document.getElementById('zoek-list');
-  var reslist = document.getElementById('resultaten-list');
-  if (!zoekacties.length) {
-    if (reslist) reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">🔍</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
-    if (list) list.innerHTML = '';
-    return;
-  }
-  var html = zoekacties.map(function(z){
-    var jaarStr = z.jaarVan && z.jaarTot ? z.jaarVan+'–'+z.jaarTot : z.jaarVan ? 'vanaf '+z.jaarVan : z.jaarTot ? 'tot '+z.jaarTot : 'Alle jaren';
-    return '<div class="zoek-item"><div class="zoek-header"><div><div class="zoek-merk">'+z.merk+' '+z.type+'</div><div class="zoek-detail">'+z.brandstof+' · '+jaarStr+'</div><div style="margin-top:5px"><span class="badge badge-groen">Actief</span></div></div><div><div class="zoek-num">'+z.resultaten+'</div><div class="zoek-lbl">resultaten</div></div></div><div class="zoek-actions"><button class="btn-sm" onclick="alert(\'Resultaten verschijnen hier zodra de bot iets vindt.\')">Resultaten</button><button class="btn-sm btn-del" onclick="verwijderZoek('+z.id+')">Verwijderen</button></div></div>';
-  }).join('');
-  if (list) list.innerHTML = html;
-  var resHtml = '<div class="sec-title" style="margin-bottom:10px">Actieve zoekopdrachten</div>'+zoekacties.map(function(z){
-    return '<div class="adv"><div class="adv-title">'+z.merk+' '+z.type+'</div><div class="adv-detail">'+z.brandstof+' · Bot scant elk uur alle sites</div><div class="adv-bottom"><span style="font-size:13px;color:#2E7D32;font-weight:600">Actief aan het scannen...</span><span class="badge badge-groen">'+z.resultaten+' resultaten</span></div></div>';
-  }).join('');
-  if (reslist) reslist.innerHTML = resHtml;
+  fetch(API + '/api/zoekopdrachten', {
+    method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({
+      email: huidigEmail,
+      merk: merk || null,
+      type_model: type || null,
+      brandstof: brandstof ? brandstof.toLowerCase() : null,
+      bouwjaar_van: jaarVan ? parseInt(jaarVan) : null,
+      bouwjaar_tot: jaarTot ? parseInt(jaarTot) : null
+    })
+  })
+  .then(function(r){ return r.json(); })
+  .then(function() {
+    alert('Zoekopdracht gestart! De bot scant elk uur voor jou.');
+    laadDashboard();
+    showTab('resultaten', document.querySelectorAll('.tab')[0]);
+  })
+  .catch(function(){ alert('Er ging iets mis. Probeer opnieuw.'); });
 }
 
 function verwijderZoek(id) {
-  if (confirm('Zoekopdracht verwijderen?')) {
-    zoekacties = zoekacties.filter(function(z){ return z.id !== id; });
-    localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
-    renderZoekacties();
-  }
+  if (!confirm('Zoekopdracht verwijderen?')) return;
+  fetch(API + '/api/zoekopdrachten/' + id, {method: 'DELETE'})
+    .then(function(){ laadDashboard(); })
+    .catch(function(){});
 }
 
 function laadHotlist() {
   var list = document.getElementById('hotlist-list');
   if (!list) return;
+  var fallback = [
+    {merk:'BMW',type_model:'5-serie 530i',brandstof:'benzine',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:147},
+    {merk:'Volkswagen',type_model:'Golf GTI',brandstof:'benzine',bouwjaar_van:2018,bouwjaar_tot:2022,aantal_zoekers:121},
+    {merk:'BMW',type_model:'540i',brandstof:'benzine',bouwjaar_van:1994,bouwjaar_tot:2000,aantal_zoekers:89},
+    {merk:'Mercedes-Benz',type_model:'C220d',brandstof:'diesel',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:79},
+    {merk:'Audi',type_model:'A4 35 TFSI',brandstof:'benzine',bouwjaar_van:2017,bouwjaar_tot:2021,aantal_zoekers:56},
+    {merk:'Toyota',type_model:'Yaris Hybrid',brandstof:'hybride',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:48},
+    {merk:'Porsche',type_model:'911',brandstof:'benzine',bouwjaar_van:1998,bouwjaar_tot:2005,aantal_zoekers:41},
+    {merk:'Renault',type_model:'Trafic',brandstof:'diesel',bouwjaar_van:2015,bouwjaar_tot:2022,aantal_zoekers:38},
+    {merk:'Ford',type_model:'Mustang GT',brandstof:'benzine',bouwjaar_van:2015,bouwjaar_tot:2020,aantal_zoekers:33},
+    {merk:'Volkswagen',type_model:'Transporter T6',brandstof:'diesel',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:29}
+  ];
   fetch(API + '/api/hotlist')
     .then(function(r){ return r.json(); })
-    .then(function(data) {
-      var items = (!data || !data.length) ? [
-        {merk:'BMW',type_model:'5-serie 530i',brandstof:'benzine',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:147},
-        {merk:'Volkswagen',type_model:'Golf GTI',brandstof:'benzine',bouwjaar_van:2018,bouwjaar_tot:2022,aantal_zoekers:121},
-        {merk:'BMW',type_model:'540i',brandstof:'benzine',bouwjaar_van:1994,bouwjaar_tot:2000,aantal_zoekers:89},
-        {merk:'Mercedes-Benz',type_model:'C220d',brandstof:'diesel',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:79},
-        {merk:'Audi',type_model:'A4 35 TFSI',brandstof:'benzine',bouwjaar_van:2017,bouwjaar_tot:2021,aantal_zoekers:56},
-        {merk:'Toyota',type_model:'Yaris Hybrid',brandstof:'hybride',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:48},
-        {merk:'Porsche',type_model:'911',brandstof:'benzine',bouwjaar_van:1998,bouwjaar_tot:2005,aantal_zoekers:41},
-        {merk:'Renault',type_model:'Trafic',brandstof:'diesel',bouwjaar_van:2015,bouwjaar_tot:2022,aantal_zoekers:38},
-        {merk:'Ford',type_model:'Mustang GT',brandstof:'benzine',bouwjaar_van:2015,bouwjaar_tot:2020,aantal_zoekers:33},
-        {merk:'Volkswagen',type_model:'Transporter T6',brandstof:'diesel',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:29}
-      ] : data;
-      renderHotlist(items);
-    })
-    .catch(function() {
-      renderHotlist([
-        {merk:'BMW',type_model:'5-serie 530i',brandstof:'benzine',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:147},
-        {merk:'Volkswagen',type_model:'Golf GTI',brandstof:'benzine',bouwjaar_van:2018,bouwjaar_tot:2022,aantal_zoekers:121}
-      ]);
-    });
+    .then(function(data){ renderHotlist(data && data.length ? data : fallback); })
+    .catch(function(){ renderHotlist(fallback); });
 }
 
 function renderHotlist(data) {
   var list = document.getElementById('hotlist-list');
   list.innerHTML = data.map(function(item, i) {
-    var rank = i+1;
+    var rank = i + 1;
     var jaarStr = item.bouwjaar_van && item.bouwjaar_tot ? item.bouwjaar_van+'–'+item.bouwjaar_tot : '';
-    return '<div class="hot-item" onclick="zoekVanHotlist(\''+item.merk+'\',\''+item.type_model+'\')"><div class="hot-rank'+(rank<=3?' top':'')+'">'+rank+'</div><div class="hot-body"><div class="hot-merk">'+item.merk+' '+(item.type_model||'')+'</div><div class="hot-detail">'+(item.brandstof||'')+' · '+jaarStr+'</div></div><div class="hot-count"><div class="hot-num">'+item.aantal_zoekers+'</div><div class="hot-lbl">zoekers</div></div>'+(rank<=3?'<span style="font-size:14px">🔥</span>':'')+'</div>';
+    return '<div class="hot-item" onclick="zoekVanHotlist(\''+item.merk+'\',\''+(item.type_model||'')+'\')">'+
+      '<div class="hot-rank'+(rank<=3?' top':'')+'">'+rank+'</div>'+
+      '<div class="hot-body"><div class="hot-merk">'+item.merk+' '+(item.type_model||'')+'</div><div class="hot-detail">'+(item.brandstof||'')+' · '+jaarStr+'</div></div>'+
+      '<div class="hot-count"><div class="hot-num">'+item.aantal_zoekers+'</div><div class="hot-lbl">zoekers</div></div>'+
+      (rank<=3?'<span style="font-size:14px">🔥</span>':'')+
+      '</div>';
   }).join('');
 }
 
@@ -389,7 +445,7 @@ function zoekVanHotlist(merk, type) {
   setTimeout(function(){
     var el = document.getElementById('f-merk');
     for (var i=0; i<el.options.length; i++) { if (el.options[i].value===merk){el.selectedIndex=i;break;} }
-    document.getElementById('f-type').value = type||'';
+    document.getElementById('f-type').value = type || '';
   }, 100);
 }
 
@@ -409,7 +465,7 @@ function gegevensOpvragen() {
 
 function bijzonderPlaatsen() {
   var omschrijving = prompt('Beschrijf de auto die je zoekt (merk, type, bouwjaar, budget):');
-  if (omschrijving) alert('Bijzondere zoekopdracht geplaatst! Zichtbaar voor handelaren en particulieren.');
+  if (omschrijving) alert('Bijzondere zoekopdracht geplaatst!');
 }
 
 vulJaren();
