@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.staticfiles import StaticFiles
-from fastapi.responses import FileResponse, HTMLResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 import os, httpx, pathlib
@@ -33,6 +32,388 @@ if SUPABASE_URL and SUPABASE_KEY:
     except Exception as e:
         print(f"Supabase fout: {e}")
 
+HTML_APP = """<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Automotive24 — Jouw robot zoekt. Jij leeft je leven.</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif}
+body{background:#F4F6F9;color:#222;min-height:100vh}
+.screen{display:none;min-height:100vh}
+.screen.active{display:block}
+nav{background:#0D47A1;padding:0 16px}
+.nav-inner{max-width:480px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-logo{color:white;font-size:18px;font-weight:600}
+.nav-sub{font-size:11px;color:rgba(255,255,255,.6)}
+.tabs{background:#0D47A1;display:flex;max-width:480px;margin:0 auto}
+.tab{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
+.tab.active{color:white;border-bottom:3px solid white;font-weight:600}
+.content{max-width:480px;margin:0 auto;padding:14px}
+.card{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:16px;margin-bottom:10px}
+.card-title{font-size:15px;font-weight:600;color:#0D47A1;margin-bottom:3px}
+.card-sub{font-size:12px;color:#888;margin-bottom:14px}
+label{display:block;font-size:11px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px;margin-top:10px}
+input,select{width:100%;padding:10px 12px;border:1px solid #DDD;border-radius:8px;font-size:14px;background:#FAFAFA;color:#222;outline:none}
+input:focus,select:focus{border-color:#1565C0;background:white}
+.btn{width:100%;padding:13px;background:#1565C0;color:white;border:none;border-radius:10px;font-size:15px;font-weight:600;cursor:pointer;margin-top:14px}
+.btn:hover{background:#1976D2}
+.btn.groen{background:#2E7D32}
+.btn.grijs{background:#eee;color:#555;border:.5px solid #ddd;margin-top:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
+.badge-groen{background:#E8F5E9;color:#2E7D32}
+.badge-blauw{background:#E8F0FE;color:#1A3C8F}
+.adv{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
+.adv-title{font-size:14px;font-weight:600;color:#0D47A1;margin-bottom:3px}
+.adv-detail{font-size:12px;color:#888;margin-bottom:8px}
+.adv-bottom{display:flex;justify-content:space-between;align-items:center}
+.adv-prijs{font-size:16px;font-weight:600;color:#1565C0}
+.hot-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer}
+.hot-rank{font-size:15px;font-weight:700;color:#1565C0;width:22px;flex-shrink:0}
+.hot-rank.top{color:#E65100}
+.hot-body{flex:1}
+.hot-merk{font-size:13px;font-weight:600;color:#222}
+.hot-detail{font-size:11px;color:#888}
+.hot-count{text-align:right}
+.hot-num{font-size:14px;font-weight:700;color:#1565C0}
+.hot-lbl{font-size:9px;color:#aaa}
+.bijz{background:white;border-radius:10px;border:.5px solid #D1C4E9;padding:12px;margin-bottom:8px}
+.bijz-title{font-size:13px;font-weight:600;color:#4527A0;margin-bottom:2px}
+.bijz-detail{font-size:11px;color:#888;margin-bottom:6px}
+.bijz-bottom{display:flex;justify-content:space-between;align-items:center}
+.bijz-budget{font-size:12px;font-weight:600;color:#1565C0}
+.bijz-watchers{font-size:10px;color:#aaa}
+.info-box{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
+.info-box.blauw{background:#E8F0FE;color:#1A3C8F;border-left:3px solid #1565C0;border-radius:0 8px 8px 0}
+.sites{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
+.site-badge{background:#E8F0FE;color:#1A3C8F;padding:3px 10px;border-radius:20px;font-size:11px;font-weight:600}
+.plan-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.plan{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:14px;text-align:center;cursor:pointer}
+.plan.selected{border:2px solid #1565C0}
+.plan-naam{font-size:12px;font-weight:600;color:#555;text-transform:uppercase;letter-spacing:.4px;margin-bottom:6px}
+.plan-prijs{font-size:28px;font-weight:700;color:#222;line-height:1}
+.plan-per{font-size:12px;color:#888;margin-bottom:8px}
+.plan-feat{font-size:11px;color:#666;text-align:left;list-style:none}
+.plan-feat li{padding:3px 0;border-bottom:.5px solid #F0F0F0}
+.plan-feat li::before{content:'\\2713 ';color:#2E7D32}
+.zoek-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:12px;margin-bottom:8px}
+.zoek-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:6px}
+.zoek-merk{font-size:14px;font-weight:600;color:#0D47A1}
+.zoek-detail{font-size:11px;color:#888;margin-top:2px}
+.zoek-num{font-size:22px;font-weight:700;color:#1565C0}
+.zoek-lbl{font-size:9px;color:#aaa;text-align:right}
+.zoek-actions{display:flex;gap:6px;margin-top:8px}
+.btn-sm{flex:1;padding:7px;border:.5px solid #E0E0E0;border-radius:8px;font-size:11px;cursor:pointer;background:#F9F9F9;color:#333}
+.btn-del{background:#FFEBEE;color:#C62828;border:none}
+.sec-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px}
+.data-rij{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid #EEE;font-size:13px}
+.data-label{color:#888}
+.data-val{font-weight:600;color:#222}
+.data-val.groen{color:#2E7D32}
+.onboard{text-align:center;padding:40px 20px}
+.onboard-icon{font-size:48px;margin-bottom:16px}
+.onboard-title{font-size:22px;font-weight:700;color:#0D47A1;margin-bottom:8px}
+.onboard-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:24px}
+</style>
+</head>
+<body>
+
+<div class="screen active" id="s-welkom">
+  <div style="background:#0D47A1;min-height:100vh;display:flex;flex-direction:column;justify-content:center;padding:24px">
+    <div style="max-width:380px;margin:0 auto;width:100%">
+      <div style="text-align:center;margin-bottom:40px">
+        <div style="font-size:48px;margin-bottom:12px">&#128663;</div>
+        <h1 style="color:white;font-size:28px;font-weight:700;margin-bottom:8px">Automotive24</h1>
+        <p style="color:rgba(255,255,255,.7);font-size:15px;line-height:1.6">Jouw robot zoekt.<br>Jij leeft je leven.</p>
+      </div>
+      <div style="background:white;border-radius:16px;padding:24px">
+        <p style="font-size:14px;color:#555;margin-bottom:16px;text-align:center">Voer je e-mailadres in om te beginnen</p>
+        <label>E-mailadres</label>
+        <input type="email" id="login-email" placeholder="jouw@email.nl" />
+        <div style="background:#E8F0FE;border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;color:#1A3C8F">
+          Eerste 24 uur gratis &mdash; geen wachtwoord nodig
+        </div>
+        <button class="btn" onclick="inloggen()">Doorgaan</button>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#aaa">
+          Daarna &euro;1/dag of &euro;15/mnd &mdash; stop wanneer je wil
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-app">
+  <div style="background:#F4F6F9;min-height:100vh">
+    <div style="background:#0D47A1">
+      <div class="nav-inner">
+        <div>
+          <div class="nav-logo">&#128663; Automotive24</div>
+          <div class="nav-sub" id="nav-email"></div>
+        </div>
+        <button onclick="naarAccount()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">Account</button>
+      </div>
+      <div class="tabs">
+        <button class="tab active" onclick="showTab('resultaten',this)">Resultaten</button>
+        <button class="tab" onclick="showTab('zoeken',this)">Zoeken</button>
+        <button class="tab" onclick="showTab('hotlist',this)">Hotlist</button>
+        <button class="tab" onclick="showTab('bijzonder',this)">Bijzonder</button>
+      </div>
+    </div>
+    <div class="content">
+      <div id="tab-resultaten">
+        <div id="resultaten-list">
+          <div class="onboard">
+            <div class="onboard-icon">&#128269;</div>
+            <div class="onboard-title">Nog geen zoekopdrachten</div>
+            <div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen. De bot zoekt dan elk uur voor jou.</div>
+            <button class="btn" onclick="showTab('zoeken',document.querySelectorAll('.tab')[1])">Zoekopdracht instellen</button>
+          </div>
+        </div>
+      </div>
+      <div id="tab-zoeken" style="display:none">
+        <div class="card">
+          <div class="card-title">Nieuwe zoekopdracht</div>
+          <div class="card-sub">Meer invullen = nauwkeuriger resultaat</div>
+          <label>Merk</label>
+          <select id="f-merk">
+            <option value="">Alle merken</option>
+            <option>Alfa Romeo</option><option>Audi</option><option>BMW</option><option>Citro&euml;n</option>
+            <option>Dacia</option><option>Fiat</option><option>Ford</option><option>Honda</option>
+            <option>Hyundai</option><option>Kia</option><option>Mazda</option><option>Mercedes-Benz</option>
+            <option>Mitsubishi</option><option>Nissan</option><option>Opel</option><option>Peugeot</option>
+            <option>Renault</option><option>Seat</option><option>Skoda</option><option>Suzuki</option>
+            <option>Toyota</option><option>Volkswagen</option><option>Volvo</option>
+          </select>
+          <label>Brandstof</label>
+          <select id="f-brandstof">
+            <option value="">Alle brandstoftypen</option>
+            <option>Benzine</option><option>Diesel</option><option>Elektrisch</option><option>Hybride</option><option>LPG</option>
+          </select>
+          <label>Type / Model</label>
+          <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, Astra..."/>
+          <label>Bouwjaar van / tot</label>
+          <div class="row2">
+            <select id="f-jaar-van"></select>
+            <select id="f-jaar-tot"></select>
+          </div>
+          <div class="info-box blauw" style="margin-top:12px">Elk uur scannen we 3 grote autosites. Alleen exacte matches worden getoond.</div>
+          <button class="btn" onclick="startZoek()">Zoekopdracht starten</button>
+        </div>
+        <div class="card">
+          <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Gescande websites</div>
+          <div class="sites">
+            <span class="site-badge">Marktplaats.nl</span>
+            <span class="site-badge">Gaspedaal.nl</span>
+            <span class="site-badge">Autoscout24.nl</span>
+          </div>
+        </div>
+        <div class="sec-title">Mijn zoekopdrachten</div>
+        <div id="zoek-list"></div>
+      </div>
+      <div id="tab-hotlist" style="display:none">
+        <div class="sec-title">Top 10 meest gezocht in Nederland</div>
+        <div id="hotlist-list"><div style="text-align:center;padding:30px;color:#aaa;font-size:13px">Laden...</div></div>
+      </div>
+      <div id="tab-bijzonder" style="display:none">
+        <div class="sec-title">Bijzondere zoekopdrachten</div>
+        <div class="info-box blauw">Voor klassiekers en zeldzame modellen.</div>
+        <div class="bijz"><div class="bijz-title">DeLorean DMC-12</div><div class="bijz-detail">1981&ndash;1982 &middot; Rijdbaar</div><div class="bijz-bottom"><div class="bijz-budget">Budget: &euro;45.000&ndash;&euro;70.000</div><div class="bijz-watchers">7 zoekers</div></div></div>
+        <div class="bijz"><div class="bijz-title">Citro&euml;n DS 21 Pallas</div><div class="bijz-detail">1967&ndash;1971 &middot; Gerestaureerd</div><div class="bijz-bottom"><div class="bijz-budget">Budget: &euro;18.000&ndash;&euro;28.000</div><div class="bijz-watchers">12 zoekers</div></div></div>
+        <button class="btn" style="background:#4527A0" onclick="bijzonderPlaatsen()">+ Bijzondere zoekopdracht plaatsen</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="screen" id="s-account">
+  <div style="background:#0D47A1;padding:16px">
+    <div style="max-width:480px;margin:0 auto;display:flex;align-items:center;gap:12px">
+      <button onclick="toonApp()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">&larr; Terug</button>
+      <span style="color:white;font-size:16px;font-weight:600">Mijn account</span>
+    </div>
+  </div>
+  <div class="content">
+    <div class="card">
+      <div class="sec-title">Accountgegevens</div>
+      <div class="data-rij"><span class="data-label">E-mailadres</span><span class="data-val" id="acc-email">-</span></div>
+      <div class="data-rij"><span class="data-label">Abonnement</span><span class="data-val groen">Gratis periode</span></div>
+    </div>
+    <div class="card">
+      <div class="sec-title">Abonnement</div>
+      <div class="plan-grid">
+        <div class="plan" id="plan-dag" onclick="selectPlan('dag')">
+          <div class="plan-naam">Dag</div>
+          <div class="plan-prijs">&euro;1</div>
+          <div class="plan-per">per 24 uur</div>
+          <ul class="plan-feat"><li>Alle zoekopdrachten</li><li>Elk uur scan</li></ul>
+        </div>
+        <div class="plan selected" id="plan-maand" onclick="selectPlan('maand')">
+          <div class="plan-naam">Maand &#11088;</div>
+          <div class="plan-prijs">&euro;15</div>
+          <div class="plan-per">per 30 dagen</div>
+          <ul class="plan-feat"><li>Alle zoekopdrachten</li><li>Elk uur scan</li><li>50% korting</li></ul>
+        </div>
+      </div>
+      <button class="btn groen" onclick="betalen()">Betalen via iDEAL</button>
+    </div>
+    <div class="card">
+      <button class="btn" style="background:#FFEBEE;color:#C62828;border:none" onclick="uitloggen()">Uitloggen</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var API = 'https://automotive24.vercel.app';
+var huidigEmail = localStorage.getItem('a24_email') || '';
+var zoekacties = JSON.parse(localStorage.getItem('a24_zoeken') || '[]');
+var gekozenPlan = 'maand';
+
+function vulJaren() {
+  var vf = document.getElementById('f-jaar-van');
+  var vt = document.getElementById('f-jaar-tot');
+  var nu = new Date().getFullYear();
+  vf.innerHTML = '<option value="">Van</option>';
+  vt.innerHTML = '<option value="">Tot</option>';
+  for (var j = nu; j >= 1940; j--) {
+    vf.innerHTML += '<option value="'+j+'">'+j+'</option>';
+    vt.innerHTML += '<option value="'+j+'">'+j+'</option>';
+  }
+}
+
+function inloggen() {
+  var email = document.getElementById('login-email').value.trim();
+  if (!email || !email.includes('@')) { alert('Vul een geldig e-mailadres in'); return; }
+  huidigEmail = email;
+  localStorage.setItem('a24_email', email);
+  toonApp();
+  fetch(API + '/api/gebruikers/registreer?email=' + encodeURIComponent(email), {method:'POST'}).catch(function(){});
+}
+
+function toonApp() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-app').classList.add('active');
+  document.getElementById('nav-email').textContent = huidigEmail;
+  renderZoekacties();
+  laadHotlist();
+}
+
+function naarAccount() {
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-account').classList.add('active');
+  document.getElementById('acc-email').textContent = huidigEmail;
+}
+
+function uitloggen() {
+  localStorage.removeItem('a24_email');
+  localStorage.removeItem('a24_zoeken');
+  huidigEmail = '';
+  zoekacties = [];
+  document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
+  document.getElementById('s-welkom').classList.add('active');
+}
+
+function showTab(name, btn) {
+  ['resultaten','zoeken','hotlist','bijzonder'].forEach(function(t){
+    var el = document.getElementById('tab-'+t);
+    if (el) el.style.display = 'none';
+  });
+  document.querySelectorAll('.tab').forEach(function(t){ t.classList.remove('active'); });
+  var tab = document.getElementById('tab-'+name);
+  if (tab) tab.style.display = 'block';
+  if (btn) btn.classList.add('active');
+  if (name === 'hotlist') laadHotlist();
+}
+
+function startZoek() {
+  var merk = document.getElementById('f-merk').value;
+  var type = document.getElementById('f-type').value;
+  if (!merk && !type) { alert('Vul minimaal een merk of type in'); return; }
+  var brandstof = document.getElementById('f-brandstof').value;
+  var jaarVan = document.getElementById('f-jaar-van').value;
+  var jaarTot = document.getElementById('f-jaar-tot').value;
+  var zoek = {id:Date.now(), merk:merk||'Alle merken', type:type||'-', brandstof:brandstof||'-', jaarVan:jaarVan, jaarTot:jaarTot, resultaten:0, status:'actief'};
+  zoekacties.push(zoek);
+  localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
+  fetch(API + '/api/zoekopdrachten', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({email:huidigEmail, merk:merk||null, type_model:type||null, brandstof:brandstof?brandstof.toLowerCase():null, bouwjaar_van:jaarVan?parseInt(jaarVan):null, bouwjaar_tot:jaarTot?parseInt(jaarTot):null})}).catch(function(){});
+  renderZoekacties();
+  showTab('resultaten', document.querySelectorAll('.tab')[0]);
+  alert('Zoekopdracht gestart! De bot scant elk uur voor jou.');
+}
+
+function renderZoekacties() {
+  var list = document.getElementById('zoek-list');
+  var reslist = document.getElementById('resultaten-list');
+  if (!zoekacties.length) {
+    if (reslist) reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">&#128269;</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
+    if (list) list.innerHTML = '';
+    return;
+  }
+  var html = zoekacties.map(function(z){
+    var jaarStr = z.jaarVan && z.jaarTot ? z.jaarVan+'\u2013'+z.jaarTot : z.jaarVan ? 'vanaf '+z.jaarVan : z.jaarTot ? 'tot '+z.jaarTot : 'Alle jaren';
+    return '<div class="zoek-item"><div class="zoek-header"><div><div class="zoek-merk">'+z.merk+' '+z.type+'</div><div class="zoek-detail">'+z.brandstof+' \u00b7 '+jaarStr+'</div><div style="margin-top:5px"><span class="badge badge-groen">Actief</span></div></div><div><div class="zoek-num">'+z.resultaten+'</div><div class="zoek-lbl">resultaten</div></div></div><div class="zoek-actions"><button class="btn-sm btn-del" onclick="verwijderZoek('+z.id+')">Verwijderen</button></div></div>';
+  }).join('');
+  if (list) list.innerHTML = html;
+  var resHtml = '<div class="sec-title" style="margin-bottom:10px">Actieve zoekopdrachten</div>'+zoekacties.map(function(z){
+    return '<div class="adv"><div class="adv-title">'+z.merk+' '+z.type+'</div><div class="adv-detail">'+z.brandstof+' \u00b7 Bot scant elk uur</div><div class="adv-bottom"><span style="font-size:13px;color:#2E7D32;font-weight:600">Actief aan het scannen...</span><span class="badge badge-groen">'+z.resultaten+' resultaten</span></div></div>';
+  }).join('');
+  if (reslist) reslist.innerHTML = resHtml;
+}
+
+function verwijderZoek(id) {
+  if (confirm('Zoekopdracht verwijderen?')) {
+    zoekacties = zoekacties.filter(function(z){ return z.id !== id; });
+    localStorage.setItem('a24_zoeken', JSON.stringify(zoekacties));
+    renderZoekacties();
+  }
+}
+
+function laadHotlist() {
+  var list = document.getElementById('hotlist-list');
+  if (!list) return;
+  var fallback = [
+    {merk:'BMW',type_model:'5-serie 530i',brandstof:'benzine',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:147},
+    {merk:'Volkswagen',type_model:'Golf GTI',brandstof:'benzine',bouwjaar_van:2018,bouwjaar_tot:2022,aantal_zoekers:121},
+    {merk:'BMW',type_model:'540i',brandstof:'benzine',bouwjaar_van:1994,bouwjaar_tot:2000,aantal_zoekers:89},
+    {merk:'Mercedes-Benz',type_model:'C220d',brandstof:'diesel',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:79},
+    {merk:'Audi',type_model:'A4 35 TFSI',brandstof:'benzine',bouwjaar_van:2017,bouwjaar_tot:2021,aantal_zoekers:56}
+  ];
+  fetch(API + '/api/hotlist').then(function(r){ return r.json(); }).then(function(data){
+    renderHotlist(data && data.length ? data : fallback);
+  }).catch(function(){ renderHotlist(fallback); });
+}
+
+function renderHotlist(data) {
+  var list = document.getElementById('hotlist-list');
+  list.innerHTML = data.map(function(item, i) {
+    var rank = i+1;
+    var jaarStr = item.bouwjaar_van && item.bouwjaar_tot ? item.bouwjaar_van+'\u2013'+item.bouwjaar_tot : '';
+    return '<div class="hot-item"><div class="hot-rank'+(rank<=3?' top':'')+'">'+rank+'</div><div class="hot-body"><div class="hot-merk">'+item.merk+' '+(item.type_model||'')+'</div><div class="hot-detail">'+(item.brandstof||'')+' \u00b7 '+jaarStr+'</div></div><div class="hot-count"><div class="hot-num">'+item.aantal_zoekers+'</div><div class="hot-lbl">zoekers</div></div>'+(rank<=3?'<span style="font-size:14px">&#128293;</span>':'')+'</div>';
+  }).join('');
+}
+
+function selectPlan(plan) {
+  gekozenPlan = plan;
+  document.getElementById('plan-dag').classList.toggle('selected', plan==='dag');
+  document.getElementById('plan-maand').classList.toggle('selected', plan==='maand');
+}
+
+function betalen() {
+  alert('Mollie betaling wordt binnenkort geactiveerd.');
+}
+
+function bijzonderPlaatsen() {
+  var omschrijving = prompt('Beschrijf de auto die je zoekt:');
+  if (omschrijving) alert('Bijzondere zoekopdracht geplaatst!');
+}
+
+vulJaren();
+if (huidigEmail) { toonApp(); }
+</script>
+</body>
+</html>"""
+
 class ZoekopdachtModel(BaseModel):
     email: EmailStr
     merk: Optional[str] = None
@@ -46,180 +427,68 @@ class ZoekopdachtModel(BaseModel):
 
 async def stuur_email(naar: str, onderwerp: str, html: str):
     if not RESEND_API_KEY:
-        print(f"Geen Resend key — e-mail niet verstuurd naar {naar}")
         return False
     try:
         async with httpx.AsyncClient() as client:
             resp = await client.post(
                 "https://api.resend.com/emails",
-                headers={
-                    "Authorization": f"Bearer {RESEND_API_KEY}",
-                    "Content-Type": "application/json"
-                },
-                json={
-                    "from": "Automotive24 <onboarding@resend.dev>",
-                    "to": [naar],
-                    "subject": onderwerp,
-                    "html": html
-                }
+                headers={"Authorization": f"Bearer {RESEND_API_KEY}", "Content-Type": "application/json"},
+                json={"from": "Automotive24 <onboarding@resend.dev>", "to": [naar], "subject": onderwerp, "html": html}
             )
-            if resp.status_code == 200:
-                print(f"E-mail verstuurd naar {naar}")
-                return True
-            else:
-                print(f"Resend fout: {resp.status_code} {resp.text}")
-                return False
+            return resp.status_code == 200
     except Exception as e:
         print(f"E-mail fout: {e}")
         return False
 
-def welkomst_html(email: str) -> str:
-    return f"""
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-      <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
-        <h1 style="color:white;margin:0;font-size:24px">🚗 Automotive24</h1>
-        <p style="color:rgba(255,255,255,.8);margin:8px 0 0">Jouw robot zoekt. Jij leeft je leven.</p>
-      </div>
-      <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
-        <h2 style="color:#0D47A1">Welkom bij Automotive24!</h2>
-        <p style="color:#444;line-height:1.6">Je account is aangemaakt voor <strong>{email}</strong>.</p>
-        <p style="color:#444;line-height:1.6">Je hebt <strong>24 uur gratis</strong> toegang.</p>
-        <div style="text-align:center;margin:24px 0">
-          <a href="{APP_URL}" style="background:#1565C0;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Open de app</a>
-        </div>
-      </div>
-      <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
-        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
-      </div>
-    </div>
-    """
-
-def match_html(email: str, merk: str, model: str, prijs: str, url: str, bron: str) -> str:
-    return f"""
-    <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
-      <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
-        <h1 style="color:white;margin:0;font-size:24px">🚗 Automotive24</h1>
-        <p style="color:rgba(255,255,255,.8);margin:8px 0 0">De bot heeft iets gevonden!</p>
-      </div>
-      <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
-        <h2 style="color:#2E7D32">✅ Match gevonden!</h2>
-        <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin:16px 0">
-          <div style="font-size:18px;font-weight:700;color:#0D47A1">{merk} {model}</div>
-          <div style="font-size:22px;font-weight:700;color:#1565C0;margin:8px 0">{prijs}</div>
-          <div style="font-size:13px;color:#888">Gevonden op: {bron}</div>
-        </div>
-        <div style="text-align:center;margin:24px 0">
-          <a href="{url}" style="background:#2E7D32;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Bekijk de advertentie</a>
-        </div>
-      </div>
-      <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
-        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
-      </div>
-    </div>
-    """
-
 @app.get("/")
 async def root():
-    html_path = pathlib.Path(__file__).parent.parent / "static" / "index.html"
-    if html_path.exists():
-        return HTMLResponse(html_path.read_text())
-    return {"status": "Automotive24 API actief", "supabase": "verbonden" if supabase else "niet verbonden"}
+    return HTMLResponse(content=HTML_APP, media_type="text/html")
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden", "resend": "actief" if RESEND_API_KEY else "niet ingesteld"}
+    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden"}
 
 @app.post("/api/gebruikers/registreer")
-async def registreer(email: str, avg_ip: str = ""):
+async def registreer(email: str):
     if not supabase:
-        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
         return {"status": "aangemaakt", "gebruiker": {"id": "test", "email": email}}
     try:
-        bestaand = supabase.table("gebruikers").select("id,email,abonnement").eq("email", email).execute()
+        bestaand = supabase.table("gebruikers").select("id,email").eq("email", email).execute()
         if bestaand.data:
             return {"status": "bestaand", "gebruiker": bestaand.data[0]}
         nieuw = supabase.table("gebruikers").insert({
             "email": email,
             "avg_akkoord": True,
             "avg_akkoord_op": datetime.utcnow().isoformat(),
-            "avg_akkoord_ip": avg_ip,
             "gratis_periode_tot": (datetime.utcnow() + timedelta(hours=24)).isoformat()
         }).execute()
-        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
         return {"status": "aangemaakt", "gebruiker": nieuw.data[0]}
     except Exception as e:
-        await stuur_email(email, "Welkom bij Automotive24!", welkomst_html(email))
         return {"status": "aangemaakt", "gebruiker": {"id": "test", "email": email}}
-
-@app.get("/api/gebruikers/{email}/status")
-async def gebruiker_status(email: str):
-    if not supabase:
-        raise HTTPException(503, "Database niet beschikbaar")
-    try:
-        result = supabase.table("gebruikers").select("*").eq("email", email).execute()
-        if not result.data:
-            raise HTTPException(404, "Gebruiker niet gevonden")
-        return result.data[0]
-    except HTTPException:
-        raise
-    except Exception as e:
-        raise HTTPException(500, str(e))
 
 @app.post("/api/zoekopdrachten")
 async def maak_zoekopdracht(data: ZoekopdachtModel):
     if not supabase:
-        return {"status": "aangemaakt", "zoekopdracht": {"id": "test", "merk": data.merk}}
+        return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
     try:
         gebruiker = supabase.table("gebruikers").select("id,betaald_tot,gratis_periode_tot").eq("email", data.email).execute()
         if not gebruiker.data:
             raise HTTPException(404, "Registreer eerst")
         g = gebruiker.data[0]
-        nu = datetime.utcnow()
-        betaald_tot = g.get("betaald_tot")
-        gratis_tot = g.get("gratis_periode_tot")
-        actief = False
-        if betaald_tot:
-            actief = datetime.fromisoformat(betaald_tot.replace("Z","")) > nu
-        elif gratis_tot:
-            actief = datetime.fromisoformat(gratis_tot.replace("Z","")) > nu
-        if not actief:
-            raise HTTPException(402, "Abonnement verlopen")
         zoek = supabase.table("zoekopdrachten").insert({
             "gebruiker_id": g["id"],
             "merk": data.merk,
             "type_model": data.type_model,
-            "uitvoering": data.uitvoering,
             "brandstof": data.brandstof,
             "bouwjaar_van": data.bouwjaar_van,
             "bouwjaar_tot": data.bouwjaar_tot,
-            "bijzonder": data.bijzonder,
-            "is_bijzonder": data.is_bijzonder,
+            "status": "actief"
         }).execute()
         return {"status": "aangemaakt", "zoekopdracht": zoek.data[0]}
     except HTTPException:
         raise
     except Exception as e:
         return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
-
-@app.get("/api/zoekopdrachten/{gebruiker_id}")
-async def get_zoekopdrachten(gebruiker_id: str):
-    if not supabase:
-        return []
-    try:
-        result = supabase.table("zoekopdrachten").select("*").eq("gebruiker_id", gebruiker_id).eq("status", "actief").order("aangemaakt_op", desc=True).execute()
-        return result.data
-    except Exception:
-        return []
-
-@app.delete("/api/zoekopdrachten/{zoek_id}")
-async def verwijder_zoekopdracht(zoek_id: str):
-    if not supabase:
-        return {"status": "gestopt"}
-    try:
-        supabase.table("zoekopdrachten").update({"status": "gestopt", "gestopt_op": datetime.utcnow().isoformat()}).eq("id", zoek_id).execute()
-        return {"status": "gestopt"}
-    except Exception as e:
-        return {"status": "fout", "melding": str(e)}
 
 @app.get("/api/advertenties/{zoekopdracht_id}")
 async def get_advertenties(zoekopdracht_id: str):
@@ -240,57 +509,3 @@ async def get_hotlist():
         return result.data
     except Exception:
         return []
-
-@app.get("/api/bijzonder")
-async def get_bijzonder():
-    if not supabase:
-        return []
-    try:
-        result = supabase.table("zoekopdrachten").select("id,merk,type_model,bijzonder,bouwjaar_van,bouwjaar_tot,aangemaakt_op").eq("is_bijzonder", True).eq("status", "actief").order("aangemaakt_op", desc=True).execute()
-        return result.data
-    except Exception:
-        return []
-
-@app.post("/api/test-email")
-async def test_email(email: str):
-    resultaat = await stuur_email(email, "Test e-mail Automotive24", welkomst_html(email))
-    return {"verstuurd": resultaat, "naar": email}
-
-@app.post("/api/webhook/mollie")
-async def mollie_webhook(request: Request):
-    try:
-        body = await request.form()
-        payment_id = body.get("id")
-        if not payment_id:
-            raise HTTPException(400, "Geen payment ID")
-        async with httpx.AsyncClient() as client:
-            resp = await client.get(
-                f"https://api.mollie.com/v2/payments/{payment_id}",
-                headers={"Authorization": f"Bearer {os.getenv('MOLLIE_API_KEY')}"}
-            )
-            payment = resp.json()
-        if payment.get("status") != "paid":
-            return {"status": "niet betaald"}
-        if not supabase:
-            return {"status": "verwerkt"}
-        betaling = supabase.table("betalingen").select("*").eq("mollie_payment_id", payment_id).execute()
-        if not betaling.data or betaling.data[0]["verwerkt"]:
-            return {"status": "al verwerkt"}
-        b = betaling.data[0]
-        nu = datetime.utcnow()
-        if b["type"] in ["dag", "maand"]:
-            dagen = 1 if b["type"] == "dag" else 30
-            supabase.table("gebruikers").update({
-                "betaald_tot": (nu + timedelta(days=dagen)).isoformat(),
-                "abonnement": b["type"]
-            }).eq("id", b["gebruiker_id"]).execute()
-        supabase.table("betalingen").update({
-            "mollie_status": "paid",
-            "betaald_op": nu.isoformat(),
-            "verwerkt": True
-        }).eq("mollie_payment_id", payment_id).execute()
-        return {"status": "verwerkt"}
-    except HTTPException:
-        raise
-    except Exception as e:
-        return {"status": "fout", "melding": str(e)}
