@@ -1,4 +1,4 @@
-import os, httpx, asyncio, re
+import os, httpx, re, hashlib
 from datetime import datetime
 from dotenv import load_dotenv
 
@@ -34,7 +34,6 @@ def supabase_request(method, path, data=None):
         return []
 
 def prijs_naar_int(prijs_str):
-    """Converteert prijsstring naar integer (euros). Bijv '€11.499' -> 11499"""
     if not prijs_str:
         return None
     try:
@@ -129,8 +128,7 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                             "prijs": prijs_int,
                             "prijs_tekst": prijs_tekst,
                             "url": adv_url,
-                            "bron": "Marktplaats.nl",
-                            "extern_id": f"mp_{item_id}"
+                            "bron": "Marktplaats.nl"
                         })
     except Exception as e:
         print(f"Marktplaats fout: {e}")
@@ -163,14 +161,12 @@ def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                     prijs_tekst = item[1]
                     prijs_int = prijs_naar_int(prijs_tekst)
                     titel = item[2]
-                    extern_id = f"as24_{item[0].replace('/', '_')}"
                     resultaten.append({
                         "titel": titel,
                         "prijs": prijs_int,
                         "prijs_tekst": prijs_tekst,
                         "url": adv_url,
-                        "bron": "Autoscout24.nl",
-                        "extern_id": extern_id
+                        "bron": "Autoscout24.nl"
                     })
     except Exception as e:
         print(f"Autoscout24 fout: {e}")
@@ -196,7 +192,6 @@ def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
                 prijzen = re.findall(r'€\s*([\d\.]+)', html)
                 titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
                 for i, link in enumerate(links[:8]):
-                    extern_id = f"gp_{link.split('/')[-1]}"
                     prijs_tekst = f"€{prijzen[i]}" if i < len(prijzen) else "Prijs onbekend"
                     prijs_int = prijs_naar_int(prijs_tekst)
                     titel = titels[i].strip() if i < len(titels) else f"{merk} {model}"
@@ -205,8 +200,7 @@ def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
                         "prijs": prijs_int,
                         "prijs_tekst": prijs_tekst,
                         "url": link,
-                        "bron": "Gaspedaal.nl",
-                        "extern_id": extern_id
+                        "bron": "Gaspedaal.nl"
                     })
     except Exception as e:
         print(f"Gaspedaal fout: {e}")
@@ -229,21 +223,25 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
     for r in resultaten:
         if not zoek_matcht(zoek, r["titel"]):
             continue
-        bestaand = supabase_request("GET", f"advertenties?extern_id=eq.{r['extern_id']}&zoekopdracht_id=eq.{zoek['id']}")
+
+        url_hash = hashlib.md5(r["url"].encode()).hexdigest()
+
+        bestaand = supabase_request("GET", f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}")
         if bestaand:
             continue
 
         insert_data = {
             "zoekopdracht_id": zoek["id"],
             "titel": r["titel"],
-            "prijs": r.get("prijs"),          # integer of None
+            "prijs": r.get("prijs"),
             "url": r["url"],
-            "bron": r["bron"],
-            "extern_id": r["extern_id"],
+            "url_hash": url_hash,
+            "site": r["bron"],
+            "merk": zoek.get("merk"),
+            "type_model": zoek.get("type_model"),
             "status": "actief",
             "gevonden_op": datetime.utcnow().isoformat()
         }
-        # Verwijder None-waarden om NOT NULL conflicten te vermijden
         insert_data = {k: v for k, v in insert_data.items() if v is not None}
 
         resultaat = supabase_request("POST", "advertenties", insert_data)
@@ -252,12 +250,10 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
             prijs_display = r.get("prijs_tekst", str(r.get("prijs", "onbekend")))
             print(f"Nieuwe match: {r['titel']} — {prijs_display} op {r['bron']}")
             if gebruiker_email:
-                merk = zoek.get("merk", "")
-                model = zoek.get("type_model", "")
                 stuur_email(
                     gebruiker_email,
-                    f"Match gevonden: {merk} {model}",
-                    match_html(merk, model, prijs_display, r["url"], r["bron"])
+                    f"Match gevonden: {zoek.get('merk', '')} {zoek.get('type_model', '')}",
+                    match_html(zoek.get('merk', ''), zoek.get('type_model', ''), prijs_display, r["url"], r["bron"])
                 )
         else:
             print(f"Insert mislukt voor: {r['titel']}")
