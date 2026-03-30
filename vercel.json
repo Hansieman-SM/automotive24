@@ -1,5 +1,20 @@
 {
   "version": 2,
-  "builds": [{"src": "api/index.py", "use": "@vercel/python"}],
-  "routes": [{"src": "/(.*)", "dest": "api/index.py"}]
+  "builds": [
+    {
+      "src": "api/index.py",
+      "use": "@vercel/python"
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/index.html",
+      "status": 301,
+      "headers": {"Location": "/"}
+    },
+    {
+      "src": "/(.*)",
+      "dest": "api/index.py"
+    }
+  ]
 }
