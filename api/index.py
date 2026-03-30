@@ -1,3 +1,4 @@
+from mangum import Mangum
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
@@ -509,3 +510,4 @@ async def get_hotlist():
         return result.data
     except Exception:
         return []
+        handler = Mangum(app)
