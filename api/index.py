@@ -4,7 +4,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse, HTMLResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
-import os, httpx
+import os, httpx, pathlib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
@@ -22,7 +22,7 @@ app.add_middleware(
 SUPABASE_URL = os.getenv("SUPABASE_URL", "")
 SUPABASE_KEY = os.getenv("SUPABASE_SERVICE_KEY", "")
 RESEND_API_KEY = os.getenv("RESEND_API_KEY", "")
-APP_URL = os.getenv("APP_URL", "https://automotive24-production.up.railway.app")
+APP_URL = os.getenv("APP_URL", "https://automotive24.vercel.app")
 
 supabase = None
 if SUPABASE_URL and SUPABASE_KEY:
@@ -83,19 +83,10 @@ def welkomst_html(email: str) -> str:
       <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
         <h2 style="color:#0D47A1">Welkom bij Automotive24!</h2>
         <p style="color:#444;line-height:1.6">Je account is aangemaakt voor <strong>{email}</strong>.</p>
-        <p style="color:#444;line-height:1.6">Je hebt <strong>24 uur gratis</strong> toegang. Stel nu je eerste zoekopdracht in en laat de bot elk uur voor jou zoeken op:</p>
-        <ul style="color:#444;line-height:2">
-          <li>Marktplaats.nl</li>
-          <li>Gaspedaal.nl</li>
-          <li>AutoTrader.nl</li>
-          <li>Autoscout24.nl</li>
-          <li>AutoWeek.nl</li>
-          <li>Autotrack.nl</li>
-        </ul>
+        <p style="color:#444;line-height:1.6">Je hebt <strong>24 uur gratis</strong> toegang.</p>
         <div style="text-align:center;margin:24px 0">
           <a href="{APP_URL}" style="background:#1565C0;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Open de app</a>
         </div>
-        <p style="color:#888;font-size:12px">Na 24 uur kost het €1 per dag of €15 per maand. Je bepaalt zelf wanneer je betaalt.</p>
       </div>
       <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
         <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
@@ -112,7 +103,6 @@ def match_html(email: str, merk: str, model: str, prijs: str, url: str, bron: st
       </div>
       <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
         <h2 style="color:#2E7D32">✅ Match gevonden!</h2>
-        <p style="color:#444">Hoi, de bot heeft een advertentie gevonden die past bij jouw zoekopdracht:</p>
         <div style="background:#F5F5F5;border-radius:8px;padding:16px;margin:16px 0">
           <div style="font-size:18px;font-weight:700;color:#0D47A1">{merk} {model}</div>
           <div style="font-size:22px;font-weight:700;color:#1565C0;margin:8px 0">{prijs}</div>
@@ -121,25 +111,19 @@ def match_html(email: str, merk: str, model: str, prijs: str, url: str, bron: st
         <div style="text-align:center;margin:24px 0">
           <a href="{url}" style="background:#2E7D32;color:white;padding:14px 28px;border-radius:8px;text-decoration:none;font-weight:600;font-size:16px">Bekijk de advertentie</a>
         </div>
-        <p style="color:#888;font-size:12px">Snel zijn loont — populaire advertenties zijn vaak snel weg.</p>
       </div>
       <div style="background:#F5F5F5;padding:12px;border-radius:0 0 12px 12px;text-align:center">
-        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen · <a href="{APP_URL}" style="color:#aaa">App openen</a></p>
+        <p style="color:#aaa;font-size:11px;margin:0">Automotive24 · TDEG BV · Groningen</p>
       </div>
     </div>
     """
 
 @app.get("/")
 async def root():
-    if os.path.exists("static/index.html"):
-        return FileResponse("static/index.html")
+    html_path = pathlib.Path(__file__).parent.parent / "static" / "index.html"
+    if html_path.exists():
+        return HTMLResponse(html_path.read_text())
     return {"status": "Automotive24 API actief", "supabase": "verbonden" if supabase else "niet verbonden"}
-
-@app.get("/app")
-async def webapp():
-    if os.path.exists("static/index.html"):
-        return FileResponse("static/index.html")
-    return HTMLResponse("<h1>Frontend nog niet beschikbaar</h1>")
 
 @app.get("/api/health")
 async def health():
@@ -310,6 +294,3 @@ async def mollie_webhook(request: Request):
         raise
     except Exception as e:
         return {"status": "fout", "melding": str(e)}
-
-if os.path.exists("static"):
-    app.mount("/static", StaticFiles(directory="static"), name="static")
