@@ -4,16 +4,19 @@
     {
       "src": "api/index.py",
       "use": "@vercel/python"
+    },
+    {
+      "src": "static/index.html",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
     {
-      "src": "/static/index.html",
-      "status": 301,
-      "headers": {"Location": "/"}
+      "src": "/",
+      "dest": "/static/index.html"
     },
     {
-      "src": "/(.*)",
+      "src": "/api/(.*)",
       "dest": "api/index.py"
     }
   ]
