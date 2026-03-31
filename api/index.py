@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from mangum import Mangum
-import os, httpx, re, hashlib, asyncio
+import os, httpx, re, hashlib
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
@@ -28,7 +28,7 @@ HTML_PATH = os.path.join(os.path.dirname(__file__), "..", "static", "index.html"
 HTML = open(HTML_PATH, encoding="utf-8").read() if os.path.exists(HTML_PATH) else "<h1>Automotive24</h1>"
 
 
-# ─── SCRAPER FUNCTIES ───────────────────────────────────────────
+# ─── SCRAPER ────────────────────────────────────────────────────
 
 def supabase_get(path):
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
@@ -43,6 +43,20 @@ def supabase_post(path, data):
         print(f"Insert fout [{r.status_code}]: {r.text}")
         return []
     return r.json()
+
+def marktplaats_url(item):
+    """Haal de correcte volledige Marktplaats URL op uit een listing item."""
+    vip_url = item.get("vipUrl", "")
+    item_id = item.get("itemId", "")
+    if vip_url:
+        if vip_url.startswith("/"):
+            return f"https://www.marktplaats.nl{vip_url}"
+        if vip_url.startswith("http"):
+            return vip_url
+    if item_id:
+        clean_id = item_id.lstrip("m")
+        return f"https://www.marktplaats.nl/v/m{clean_id}"
+    return ""
 
 def normaliseer_merk(merk):
     if not merk:
@@ -74,8 +88,7 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                 titel = item.get("title", "")
                 prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
                 prijs_int = prijs_cents // 100 if prijs_cents else None
-                item_id = item.get("itemId", "")
-                adv_url = f"https://www.marktplaats.nl/v/m{item_id}" if item_id else ""
+                adv_url = marktplaats_url(item)
                 if titel and adv_url:
                     resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url, "bron": "Marktplaats.nl"})
     except Exception as e:
@@ -101,8 +114,8 @@ def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
             prijzen = re.findall(r'€\s*([\d\.]+)', html)
             titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
             for i, link in enumerate(links[:10]):
-                prijs_tekst = prijzen[i] if i < len(prijzen) else None
-                prijs_int = int(re.sub(r'[^\d]', '', prijs_tekst)) if prijs_tekst else None
+                prijs_str = prijzen[i] if i < len(prijzen) else None
+                prijs_int = int(re.sub(r'[^\d]', '', prijs_str)) if prijs_str else None
                 titel = titels[i].strip() if i < len(titels) else f"{merk} {model}"
                 resultaten.append({"titel": titel, "prijs": prijs_int, "url": link, "bron": "Gaspedaal.nl"})
     except Exception as e:
@@ -183,7 +196,7 @@ def scrape_voor_zoekopdracht(zoek):
     print(f"Zoekopdracht {zoek['id']}: {nieuwe} nieuwe advertenties")
 
 
-# ─── API ENDPOINTS ───────────────────────────────────────────────
+# ─── ENDPOINTS ───────────────────────────────────────────────────
 
 class ZoekopdachtModel(BaseModel):
     email: EmailStr
@@ -269,7 +282,6 @@ async def maak_zoekopdracht(data: ZoekopdachtModel, background_tasks: Background
             "status": "actief"
         }).execute()
         zoek_data = zoek.data[0]
-        # Direct scrapen op de achtergrond
         background_tasks.add_task(scrape_voor_zoekopdracht, zoek_data)
         return {"status": "aangemaakt", "zoekopdracht": zoek_data}
     except HTTPException:
