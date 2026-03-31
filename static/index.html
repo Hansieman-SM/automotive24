@@ -36,14 +36,14 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .zoek-meta{color:rgba(255,255,255,.7);font-size:11px;margin-top:2px}
 .zoek-count{color:white;font-size:20px;font-weight:700;text-align:right}
 .zoek-count-lbl{color:rgba(255,255,255,.7);font-size:9px}
-.adv-item{padding:12px 16px;border-bottom:.5px solid #F0F0F0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.adv-item:last-child{border-bottom:none}
+.adv-link-rij{display:block;text-decoration:none;color:inherit;border-bottom:.5px solid #F0F0F0}
+.adv-link-rij:last-child{border-bottom:none}
+.adv-link-rij:hover .adv-item{background:#F8FBFF}
+.adv-item{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;gap:12px;cursor:pointer}
 .adv-titel{font-size:13px;font-weight:600;color:#222;margin-bottom:3px}
-.adv-meta{font-size:11px;color:#888;margin-bottom:4px}
-.adv-prijs{font-size:16px;font-weight:700;color:#1565C0;white-space:nowrap;text-align:right}
-.adv-link{display:inline-block;margin-top:6px;padding:5px 14px;background:#1565C0;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none}
-.adv-link:hover{background:#1976D2}
-.geen-adv{padding:20px 16px;text-align:center;color:#aaa;font-size:13px}
+.adv-meta{font-size:11px;color:#888}
+.adv-prijs{font-size:16px;font-weight:700;color:#1565C0;white-space:nowrap;text-align:right;flex-shrink:0}
+.adv-arrow{font-size:16px;color:#1565C0;margin-left:6px;flex-shrink:0}
 .scanning{padding:16px;text-align:center;color:#1565C0;font-size:13px;font-weight:500}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 .scanning-dot{display:inline-block;animation:pulse 1.2s infinite}
@@ -325,7 +325,7 @@ function stopRefresh() {
 
 function laadDashboard() {
   var reslist = document.getElementById('resultaten-list');
-  if (!dashboardData.length) reslist.innerHTML = '<div class="laden">Advertenties laden...</div>';
+  if (!dashboardData.length) reslist.innerHTML = '<div class="laden">Laden...</div>';
   fetch(API + '/api/gebruikers/' + encodeURIComponent(huidigEmail) + '/dashboard')
     .then(function(r){ return r.json(); })
     .then(function(data) {
@@ -353,12 +353,17 @@ function renderResultaten() {
       var prijs = adv.prijs ? '€' + Number(adv.prijs).toLocaleString('nl-NL') : 'Prijs onbekend';
       var site = adv.site || '';
       var datum = adv.gevonden_op ? new Date(adv.gevonden_op).toLocaleDateString('nl-NL') : '';
-      return '<div class="adv-item">' +
+      var url = adv.url || '#';
+      return '<a href="'+url+'" target="_blank" rel="noopener" class="adv-link-rij">' +
+        '<div class="adv-item">' +
         '<div style="flex:1"><div class="adv-titel">'+(adv.titel||'')+'</div>' +
-        '<div class="adv-meta">'+site+(datum?' · '+datum:'')+'</div>' +
-        '<a href="'+(adv.url||'#')+'" target="_blank" class="adv-link">Bekijk advertentie →</a></div>' +
-        '<div class="adv-prijs">'+prijs+'</div></div>';
+        '<div class="adv-meta">'+site+(datum?' · '+datum:'')+'</div></div>' +
+        '<div style="display:flex;align-items:center;gap:4px">' +
+        '<div class="adv-prijs">'+prijs+'</div>' +
+        '<div class="adv-arrow">›</div></div>' +
+        '</div></a>';
     }).join('') : '<div class="scanning"><span class="scanning-dot">🔄</span> Aan het zoeken — resultaten verschijnen hier zo</div>';
+
     return '<div class="zoek-blok">' +
       '<div class="zoek-header-blok">' +
       '<div><div class="zoek-naam">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>'+(meta?'<div class="zoek-meta">'+meta+'</div>':'')+
