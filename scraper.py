@@ -43,19 +43,20 @@ def prijs_naar_int(prijs_str):
         return None
 
 def marktplaats_url(item):
-    """Haal de correcte volledige Marktplaats URL op uit een listing item."""
-    vip_url = item.get("vipUrl", "")
+    """Haal de correcte volledige Marktplaats URL op."""
     item_id = item.get("itemId", "")
-    if vip_url:
-        # Relatieve URL: /v/auto-s/... → maak absoluut
-        if vip_url.startswith("/"):
-            return f"https://www.marktplaats.nl{vip_url}"
-        # Al absoluut
-        if vip_url.startswith("http"):
-            return vip_url
-    # Fallback: gebruik itemId
+    # Probeer eerst het 'url' veld (bevat de volledige slug URL)
+    for veld in ["url", "vipUrl", "link"]:
+        val = item.get(veld, "")
+        if val:
+            if val.startswith("http"):
+                return val
+            if val.startswith("/"):
+                return f"https://www.marktplaats.nl{val}"
+    # Fallback via itemId — verwijder dubbele 'm' prefix indien aanwezig
     if item_id:
-        return f"https://www.marktplaats.nl/v/m{item_id}"
+        clean_id = item_id.lstrip("m")
+        return f"https://www.marktplaats.nl/v/m{clean_id}"
     return ""
 
 def stuur_email(naar, onderwerp, html):
@@ -75,7 +76,7 @@ def match_html(merk, model, prijs, url, bron):
     return f"""
     <div style="font-family:Arial,sans-serif;max-width:600px;margin:0 auto;padding:20px">
       <div style="background:#0D47A1;padding:24px;border-radius:12px 12px 0 0;text-align:center">
-        <h1 style="color:white;margin:0">🚗 Automotive24</h1>
+        <h1 style="color:white;margin:0">Automotive24</h1>
         <p style="color:rgba(255,255,255,.8);margin:8px 0 0">De bot heeft iets gevonden!</p>
       </div>
       <div style="background:white;padding:24px;border:1px solid #E0E0E0;border-top:none">
@@ -124,19 +125,25 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
             "Accept": "application/json"
         }
-        url = "https://www.marktplaats.nl/lrp/api/search"
         with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as client:
-            r = client.get(url, params=params)
+            r = client.get("https://www.marktplaats.nl/lrp/api/search", params=params)
             if r.status_code == 200:
                 data = r.json()
+                # Debug: print velden van eerste item
                 listings = data.get("listings", [])
+                if listings:
+                    first = listings[0]
+                    print(f"MP velden: {list(first.keys())[:15]}")
+                    print(f"MP vipUrl: {first.get('vipUrl','')}")
+                    print(f"MP url: {first.get('url','')}")
+                    print(f"MP itemId: {first.get('itemId','')}")
                 for item in listings[:15]:
                     titel = item.get("title", "")
-                    prijs_data = item.get("priceInfo", {})
-                    prijs_cents = prijs_data.get("priceCents", 0)
+                    prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
                     prijs_int = prijs_cents // 100 if prijs_cents else None
                     prijs_tekst = f"€{prijs_int:,}".replace(",", ".") if prijs_int else "Vraagprijs onbekend"
                     adv_url = marktplaats_url(item)
+                    print(f"  URL gebouwd: {adv_url}")
                     if titel and adv_url:
                         resultaten.append({
                             "titel": titel,
@@ -162,24 +169,19 @@ def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
             params["fregto"] = f"{bouwjaar_tot}-12"
         headers = {
             "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-            "Accept": "application/json",
             "Accept-Language": "nl-NL,nl;q=0.9"
         }
-        url = "https://www.autoscout24.nl/lst"
         with httpx.Client(timeout=20, headers=headers, follow_redirects=True) as client:
-            r = client.get(url, params=params)
+            r = client.get("https://www.autoscout24.nl/lst", params=params)
             if r.status_code == 200:
-                html = r.text
-                items = re.findall(r'"url":"(/auto/[^"]+)".*?"price":"([^"]+)".*?"title":"([^"]+)"', html)
+                items = re.findall(r'"url":"(/auto/[^"]+)".*?"price":"([^"]+)".*?"title":"([^"]+)"', r.text)
                 for item in items[:10]:
                     adv_url = f"https://www.autoscout24.nl{item[0]}"
-                    prijs_tekst = item[1]
-                    prijs_int = prijs_naar_int(prijs_tekst)
-                    titel = item[2]
+                    prijs_int = prijs_naar_int(item[1])
                     resultaten.append({
-                        "titel": titel,
+                        "titel": item[2],
                         "prijs": prijs_int,
-                        "prijs_tekst": prijs_tekst,
+                        "prijs_tekst": item[1],
                         "url": adv_url,
                         "bron": "Autoscout24.nl"
                     })
@@ -208,11 +210,10 @@ def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
                 titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
                 for i, link in enumerate(links[:8]):
                     prijs_tekst = f"€{prijzen[i]}" if i < len(prijzen) else "Prijs onbekend"
-                    prijs_int = prijs_naar_int(prijs_tekst)
                     titel = titels[i].strip() if i < len(titels) else f"{merk} {model}"
                     resultaten.append({
                         "titel": titel,
-                        "prijs": prijs_int,
+                        "prijs": prijs_naar_int(prijs_tekst),
                         "prijs_tekst": prijs_tekst,
                         "url": link,
                         "bron": "Gaspedaal.nl"
@@ -228,8 +229,7 @@ def zoek_matcht(zoek, resultaat_titel):
     if merk and merk not in titel_lower and normaliseer_merk(merk) not in titel_lower:
         return False
     if model:
-        model_woorden = model.split()
-        if not any(w in titel_lower for w in model_woorden if len(w) > 2):
+        if not any(w in titel_lower for w in model.split() if len(w) > 2):
             return False
     return True
 
@@ -238,13 +238,10 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
     for r in resultaten:
         if not zoek_matcht(zoek, r["titel"]):
             continue
-
         url_hash = hashlib.md5(r["url"].encode()).hexdigest()
-
         bestaand = supabase_request("GET", f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}")
         if bestaand:
             continue
-
         insert_data = {
             "zoekopdracht_id": zoek["id"],
             "titel": r["titel"],
@@ -258,7 +255,6 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
             "gevonden_op": datetime.utcnow().isoformat()
         }
         insert_data = {k: v for k, v in insert_data.items() if v is not None}
-
         resultaat = supabase_request("POST", "advertenties", insert_data)
         if resultaat:
             nieuwe_matches += 1
@@ -272,7 +268,6 @@ def verwerk_resultaten(zoek, resultaten, gebruiker_email):
                 )
         else:
             print(f"Insert mislukt voor: {r['titel']}")
-
     return nieuwe_matches
 
 def run_scraper():
@@ -280,37 +275,28 @@ def run_scraper():
     if not SUPABASE_KEY:
         print("Geen Supabase key — stop")
         return
-
     zoekopdrachten = supabase_request("GET", "zoekopdrachten?status=eq.actief&select=*,gebruikers(email)")
     if not zoekopdrachten:
         print("Geen actieve zoekopdrachten")
         return
-
     print(f"{len(zoekopdrachten)} actieve zoekopdrachten gevonden")
     totaal_nieuw = 0
-
     for zoek in zoekopdrachten:
         merk = zoek.get("merk", "")
         model = zoek.get("type_model", "")
         bouwjaar_van = zoek.get("bouwjaar_van")
         bouwjaar_tot = zoek.get("bouwjaar_tot")
         brandstof = zoek.get("brandstof")
-        gebruiker_email = None
-        if zoek.get("gebruikers"):
-            gebruiker_email = zoek["gebruikers"].get("email")
-
+        gebruiker_email = zoek["gebruikers"].get("email") if zoek.get("gebruikers") else None
         print(f"\nZoeken: {merk} {model} ({bouwjaar_van}–{bouwjaar_tot})")
-
         alle_resultaten = []
         alle_resultaten += scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof)
         alle_resultaten += scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof)
         alle_resultaten += scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot)
-
         print(f"Gevonden: {len(alle_resultaten)} advertenties op 3 sites")
         nieuw = verwerk_resultaten(zoek, alle_resultaten, gebruiker_email)
         totaal_nieuw += nieuw
         print(f"Nieuwe matches opgeslagen: {nieuw}")
-
     print(f"\nTotaal nieuwe matches: {totaal_nieuw}")
     print("=== Scraper klaar ===")
 
