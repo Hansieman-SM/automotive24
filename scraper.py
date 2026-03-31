@@ -42,6 +42,22 @@ def prijs_naar_int(prijs_str):
     except:
         return None
 
+def marktplaats_url(item):
+    """Haal de correcte volledige Marktplaats URL op uit een listing item."""
+    vip_url = item.get("vipUrl", "")
+    item_id = item.get("itemId", "")
+    if vip_url:
+        # Relatieve URL: /v/auto-s/... → maak absoluut
+        if vip_url.startswith("/"):
+            return f"https://www.marktplaats.nl{vip_url}"
+        # Al absoluut
+        if vip_url.startswith("http"):
+            return vip_url
+    # Fallback: gebruik itemId
+    if item_id:
+        return f"https://www.marktplaats.nl/v/m{item_id}"
+    return ""
+
 def stuur_email(naar, onderwerp, html):
     if not RESEND_API_KEY:
         return
@@ -114,14 +130,13 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
             if r.status_code == 200:
                 data = r.json()
                 listings = data.get("listings", [])
-                for item in listings[:10]:
+                for item in listings[:15]:
                     titel = item.get("title", "")
                     prijs_data = item.get("priceInfo", {})
                     prijs_cents = prijs_data.get("priceCents", 0)
                     prijs_int = prijs_cents // 100 if prijs_cents else None
                     prijs_tekst = f"€{prijs_int:,}".replace(",", ".") if prijs_int else "Vraagprijs onbekend"
-                    item_id = item.get("itemId", "")
-                    adv_url = item.get("vipUrl", "") or f"https://www.marktplaats.nl/v/m{item_id}"
+                    adv_url = marktplaats_url(item)
                     if titel and adv_url:
                         resultaten.append({
                             "titel": titel,
