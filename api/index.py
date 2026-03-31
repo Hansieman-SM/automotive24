@@ -129,7 +129,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
         <p style="font-size:14px;color:#555;margin-bottom:16px;text-align:center">Voer je e-mailadres in om te beginnen</p>
         <label>E-mailadres</label>
         <input type="email" id="login-email" placeholder="jouw@email.nl" onkeydown="if(event.key==='Enter')inloggen()" />
-        <div style="background:#E8F0FE;border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;color:#1A3C8F">Eerste 24 uur gratis &mdash; geen wachtwoord nodig</div>
+
         <button class="btn" onclick="inloggen()">Doorgaan</button>
       </div>
     </div>
