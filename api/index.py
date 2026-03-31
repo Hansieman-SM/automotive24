@@ -4,7 +4,7 @@ from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from mangum import Mangum
-import os, httpx, re, hashlib
+import os, httpx, hashlib, re, json
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
@@ -257,7 +257,7 @@ function stopRefresh(){if(refreshInterval){clearInterval(refreshInterval);refres
 function laadDashboard(){var reslist=document.getElementById('resultaten-list');if(!dashboardData.length)reslist.innerHTML='<div class="laden">Laden...</div>';fetch(API+'/api/gebruikers/'+encodeURIComponent(huidigEmail)+'/dashboard').then(function(r){return r.json();}).then(function(data){dashboardData=data.zoekopdrachten||[];renderResultaten();renderZoekLijst();}).catch(function(){if(!dashboardData.length)reslist.innerHTML='<div class="onboard"><div class="onboard-icon">&#9888;</div><div class="onboard-title">Kon niet laden</div><button class="btn" onclick="laadDashboard()">Opnieuw</button></div>';});}
 function renderResultaten(){var reslist=document.getElementById('resultaten-list');if(!dashboardData.length){reslist.innerHTML='<div class="onboard"><div class="onboard-icon">&#128269;</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(&quot;zoeken&quot;,document.querySelectorAll(&quot;.tab&quot;)[1])">Zoekopdracht instellen</button></div>';return;}var html=dashboardData.map(function(zoek){var brandstof=zoek.brandstof||'';var jaren=zoek.bouwjaar_van&&zoek.bouwjaar_tot?zoek.bouwjaar_van+'\u2013'+zoek.bouwjaar_tot:zoek.bouwjaar_van?'vanaf '+zoek.bouwjaar_van:zoek.bouwjaar_tot?'tot '+zoek.bouwjaar_tot:'';var meta=[brandstof,jaren].filter(Boolean).join(' \u00b7 ');var advs=zoek.advertenties||[];var advHtml=advs.length?advs.map(function(adv){var prijs=adv.prijs?'\u20ac'+Number(adv.prijs).toLocaleString('nl-NL'):'Prijs onbekend';var site=adv.site||'';var datum=adv.gevonden_op?new Date(adv.gevonden_op).toLocaleDateString('nl-NL'):'';return'<a href="'+(adv.url||'#')+'" target="_blank" rel="noopener" class="adv-link-rij"><div class="adv-item"><div style="flex:1"><div class="adv-titel">'+(adv.titel||'')+'</div><div class="adv-meta-txt">'+site+(datum?' \u00b7 '+datum:'')+'</div></div><div style="display:flex;align-items:center"><div class="adv-prijs">'+prijs+'</div><div class="adv-arrow">\u203a</div></div></div></a>';}).join(''):'<div class="scanning"><span class="scanning-dot">&#128260;</span> Aan het zoeken \u2014 resultaten verschijnen hier zo</div>';return'<div class="zoek-blok"><div class="zoek-header-blok"><div><div class="zoek-naam">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>'+(meta?'<div class="zoek-meta">'+meta+'</div>':'')+' </div><div><div class="zoek-count">'+advs.length+'</div><div class="zoek-count-lbl">resultaten</div></div></div>'+advHtml+'</div>';}).join('');reslist.innerHTML=html;}
 function renderZoekLijst(){var list=document.getElementById('zoek-list');if(!list)return;if(!dashboardData.length){list.innerHTML='';return;}list.innerHTML=dashboardData.map(function(zoek){var jaren=zoek.bouwjaar_van&&zoek.bouwjaar_tot?zoek.bouwjaar_van+'\u2013'+zoek.bouwjaar_tot:'Alle jaren';return'<div class="zoek-item"><div class="zoek-item-header"><div><div class="zoek-item-merk">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div><div class="zoek-item-detail">'+(zoek.brandstof||'-')+' \u00b7 '+jaren+'</div></div><span class="badge badge-groen">Actief</span></div><div class="zoek-item-actions"><button class="btn-sm btn-del" onclick="verwijderZoek(&quot;'+zoek.id+'&quot;)">Verwijderen</button></div></div>';}).join('');}
-function startZoek(){var merk=document.getElementById('f-merk').value,type=document.getElementById('f-type').value;if(!merk&&!type){alert('Vul minimaal een merk of type in');return;}var brandstof=document.getElementById('f-brandstof').value,jaarVan=document.getElementById('f-jaar-van').value,jaarTot=document.getElementById('f-jaar-tot').value,btn=document.getElementById('start-btn');btn.disabled=true;btn.textContent='&#128269; Zoeken gestart...';fetch(API+'/api/zoekopdrachten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:huidigEmail,merk:merk||null,type_model:type||null,brandstof:brandstof?brandstof.toLowerCase():null,bouwjaar_van:jaarVan?parseInt(jaarVan):null,bouwjaar_tot:jaarTot?parseInt(jaarTot):null})}).then(function(r){return r.json();}).then(function(){btn.disabled=false;btn.textContent='&#128269; Zoekopdracht starten';showTab('resultaten',document.querySelectorAll('.tab')[0]);laadDashboard();startAutoRefresh();}).catch(function(){btn.disabled=false;btn.textContent='&#128269; Zoekopdracht starten';alert('Er ging iets mis. Probeer opnieuw.');});}
+function startZoek(){var merk=document.getElementById('f-merk').value,type=document.getElementById('f-type').value;if(!merk&&!type){alert('Vul minimaal een merk of type in');return;}var brandstof=document.getElementById('f-brandstof').value,jaarVan=document.getElementById('f-jaar-van').value,jaarTot=document.getElementById('f-jaar-tot').value,btn=document.getElementById('start-btn');btn.disabled=true;btn.innerHTML='\uD83D\uDD0D Zoeken gestart...';fetch(API+'/api/zoekopdrachten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:huidigEmail,merk:merk||null,type_model:type||null,brandstof:brandstof?brandstof.toLowerCase():null,bouwjaar_van:jaarVan?parseInt(jaarVan):null,bouwjaar_tot:jaarTot?parseInt(jaarTot):null})}).then(function(r){return r.json();}).then(function(){btn.disabled=false;btn.innerHTML='\uD83D\uDD0D Zoekopdracht starten';showTab('resultaten',document.querySelectorAll('.tab')[0]);laadDashboard();startAutoRefresh();}).catch(function(){btn.disabled=false;btn.innerHTML='\uD83D\uDD0D Zoekopdracht starten';alert('Er ging iets mis. Probeer opnieuw.');});}
 function verwijderZoek(id){if(!confirm('Zoekopdracht verwijderen?'))return;fetch(API+'/api/zoekopdrachten/'+id,{method:'DELETE'}).then(function(){laadDashboard();}).catch(function(){});}
 function laadHotlist(){var list=document.getElementById('hotlist-list');if(!list)return;var fallback=[{merk:'BMW',type_model:'5-serie 530i',brandstof:'benzine',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:147},{merk:'Volkswagen',type_model:'Golf GTI',brandstof:'benzine',bouwjaar_van:2018,bouwjaar_tot:2022,aantal_zoekers:121},{merk:'BMW',type_model:'540i',brandstof:'benzine',bouwjaar_van:1994,bouwjaar_tot:2000,aantal_zoekers:89},{merk:'Mercedes-Benz',type_model:'C220d',brandstof:'diesel',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:79},{merk:'Audi',type_model:'A4 35 TFSI',brandstof:'benzine',bouwjaar_van:2017,bouwjaar_tot:2021,aantal_zoekers:56},{merk:'Toyota',type_model:'Yaris Hybrid',brandstof:'hybride',bouwjaar_van:2019,bouwjaar_tot:2023,aantal_zoekers:48},{merk:'Porsche',type_model:'911',brandstof:'benzine',bouwjaar_van:1998,bouwjaar_tot:2005,aantal_zoekers:41},{merk:'Renault',type_model:'Trafic',brandstof:'diesel',bouwjaar_van:2015,bouwjaar_tot:2022,aantal_zoekers:38},{merk:'Ford',type_model:'Mustang GT',brandstof:'benzine',bouwjaar_van:2015,bouwjaar_tot:2020,aantal_zoekers:33},{merk:'Volkswagen',type_model:'Transporter T6',brandstof:'diesel',bouwjaar_van:2016,bouwjaar_tot:2021,aantal_zoekers:29}];fetch(API+'/api/hotlist').then(function(r){return r.json();}).then(function(data){renderHotlist(data&&data.length?data:fallback);}).catch(function(){renderHotlist(fallback);});}
 function renderHotlist(data){var list=document.getElementById('hotlist-list');list.innerHTML=data.map(function(item,i){var rank=i+1,jaarStr=item.bouwjaar_van&&item.bouwjaar_tot?item.bouwjaar_van+'\u2013'+item.bouwjaar_tot:'';return'<div class="hot-item" onclick="zoekVanHotlist(&quot;'+item.merk+'&quot;,&quot;'+(item.type_model||'')+'&quot;)">'+'<div class="hot-rank'+(rank<=3?' top':'')+'">'+rank+'</div>'+'<div class="hot-body"><div class="hot-merk">'+item.merk+' '+(item.type_model||'')+'</div><div class="hot-detail">'+(item.brandstof||'')+' \u00b7 '+jaarStr+'</div></div>'+'<div class="hot-count"><div class="hot-num">'+item.aantal_zoekers+'</div><div class="hot-lbl">zoekers</div></div>'+(rank<=3?'<span style="font-size:14px">&#128293;</span>':'')+' </div>';}).join('');}
@@ -309,12 +309,22 @@ def marktplaats_url(item):
 def normaliseer_merk(merk):
     if not merk:
         return ""
-    mapping = {"vw":"volkswagen","mercedes":"mercedes-benz","bmw":"bmw","audi":"audi","ford":"ford",
-               "opel":"opel","toyota":"toyota","honda":"honda","renault":"renault","peugeot":"peugeot",
-               "skoda":"skoda","seat":"seat","kia":"kia","hyundai":"hyundai","nissan":"nissan",
-               "mazda":"mazda","volvo":"volvo","fiat":"fiat","dacia":"dacia","mitsubishi":"mitsubishi",
-               "suzuki":"suzuki","porsche":"porsche","tesla":"tesla","citroen":"citroën","citroën":"citroën"}
+    mapping = {"vw": "volkswagen", "mercedes": "mercedes-benz", "bmw": "bmw", "audi": "audi",
+               "ford": "ford", "opel": "opel", "toyota": "toyota", "honda": "honda",
+               "renault": "renault", "peugeot": "peugeot", "skoda": "skoda", "seat": "seat",
+               "kia": "kia", "hyundai": "hyundai", "nissan": "nissan", "mazda": "mazda",
+               "volvo": "volvo", "fiat": "fiat", "dacia": "dacia", "mitsubishi": "mitsubishi",
+               "suzuki": "suzuki", "porsche": "porsche", "tesla": "tesla",
+               "citroen": "citroën", "citroën": "citroën"}
     return mapping.get(merk.strip().lower(), merk.strip().lower())
+
+BRANDSTOF_MAP = {
+    "benzine": ["benzine", "petrol", "gasoline"],
+    "diesel": ["diesel"],
+    "elektrisch": ["elektrisch", "electric", "ev"],
+    "hybride": ["hybride", "hybrid", "phev", "hev"],
+    "lpg": ["lpg", "autogas"],
+}
 
 def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
     resultaten = []
@@ -324,8 +334,10 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                       "limit": "30", "offset": str(pagina * 30)}
             if bouwjaar_van: params["constructionYearFrom"] = str(bouwjaar_van)
             if bouwjaar_tot: params["constructionYearTo"] = str(bouwjaar_tot)
-            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json"}
-            r = httpx.get("https://www.marktplaats.nl/lrp/api/search", params=params, headers=headers, timeout=20, follow_redirects=True)
+            headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                       "Accept": "application/json"}
+            r = httpx.get("https://www.marktplaats.nl/lrp/api/search", params=params,
+                          headers=headers, timeout=20, follow_redirects=True)
             if r.status_code != 200: break
             listings = r.json().get("listings", [])
             if not listings: break
@@ -334,37 +346,171 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                 prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
                 prijs_int = prijs_cents // 100 if prijs_cents else None
                 adv_url = marktplaats_url(item)
+                attrs = item.get("attributes", [])
+                jaar = None
+                brandstof_adv = None
+                for attr in attrs:
+                    if attr.get("key") == "constructionYear":
+                        try: jaar = int(attr.get("value", 0))
+                        except: pass
+                    if attr.get("key") == "fuel":
+                        brandstof_adv = (attr.get("value") or "").lower()
                 if titel and adv_url:
-                    resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url, "bron": "Marktplaats.nl"})
+                    resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url,
+                                       "bron": "Marktplaats.nl", "jaar": jaar,
+                                       "brandstof_adv": brandstof_adv})
     except Exception as e:
         print(f"Marktplaats fout: {e}")
     return resultaten
 
-def zoek_matcht(zoek, titel):
-    titel_l = titel.lower()
+def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
+    resultaten = []
+    try:
+        query = f"{merk} {model}".strip().replace(" ", "+")
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "nl-NL,nl;q=0.9",
+        }
+        url = f"https://www.gaspedaal.nl/zoeken?q={query}"
+        if bouwjaar_van: url += f"&jaarvan={bouwjaar_van}"
+        if bouwjaar_tot: url += f"&jaartot={bouwjaar_tot}"
+        r = httpx.get(url, headers=headers, timeout=20, follow_redirects=True)
+        if r.status_code == 200:
+            html = r.text
+            titels = re.findall(r'<h2[^>]*class="[^"]*title[^"]*"[^>]*>(.*?)</h2>', html, re.DOTALL)
+            prijzen = re.findall(r'<span[^>]*class="[^"]*price[^"]*"[^>]*>(.*?)</span>', html, re.DOTALL)
+            links = re.findall(r'href="(https://www\.gaspedaal\.nl/[^"]+)"', html)
+            for i, titel in enumerate(titels[:20]):
+                titel_clean = re.sub(r'<[^>]+>', '', titel).strip()
+                prijs_raw = prijzen[i] if i < len(prijzen) else ""
+                prijs_clean = re.sub(r'[^\d]', '', re.sub(r'<[^>]+>', '', prijs_raw))
+                prijs_int = int(prijs_clean) if prijs_clean else None
+                link = links[i] if i < len(links) else ""
+                if titel_clean and link:
+                    resultaten.append({"titel": titel_clean, "prijs": prijs_int, "url": link,
+                                       "bron": "Gaspedaal.nl", "jaar": None, "brandstof_adv": None})
+    except Exception as e:
+        print(f"Gaspedaal fout: {e}")
+    return resultaten
+
+def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
+    resultaten = []
+    try:
+        merk_as = (merk or "").lower().replace("-", "").replace(" ", "")
+        model_as = (model or "").lower().replace(" ", "-")
+        brandstof_map_as = {"benzine": "B", "diesel": "D", "elektrisch": "E", "hybride": "H", "lpg": "L"}
+        params = {"atype": "C", "cy": "NL", "sort": "standard", "desc": "0", "ustate": "N,U"}
+        if merk_as: params["mmvmk0"] = merk_as
+        if model_as: params["mmvmo0"] = model_as
+        if bouwjaar_van: params["fregfrom"] = str(bouwjaar_van)
+        if bouwjaar_tot: params["fregto"] = str(bouwjaar_tot)
+        if brandstof and brandstof.lower() in brandstof_map_as:
+            params["fuel"] = brandstof_map_as[brandstof.lower()]
+        headers = {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/120 Safari/537.36",
+            "Accept": "text/html,application/xhtml+xml",
+            "Accept-Language": "nl-NL,nl;q=0.9",
+        }
+        r = httpx.get("https://www.autoscout24.nl/lst", params=params, headers=headers,
+                      timeout=25, follow_redirects=True)
+        if r.status_code == 200:
+            html = r.text
+            # Probeer JSON data in de pagina
+            json_match = re.search(r'"listings"\s*:\s*(\[.*?\])\s*[,}]', html, re.DOTALL)
+            if json_match:
+                try:
+                    listings = json.loads(json_match.group(1))
+                    for item in listings[:20]:
+                        titel = f"{item.get('make','')} {item.get('model','')} {item.get('version','')}".strip()
+                        prijs = item.get("price")
+                        adv_url = item.get("url", "")
+                        if adv_url and not adv_url.startswith("http"):
+                            adv_url = f"https://www.autoscout24.nl{adv_url}"
+                        jaar = item.get("firstRegistrationYear")
+                        if titel and adv_url:
+                            resultaten.append({"titel": titel, "prijs": prijs, "url": adv_url,
+                                               "bron": "Autoscout24.nl", "jaar": jaar,
+                                               "brandstof_adv": None})
+                except Exception:
+                    pass
+            # Fallback: regex
+            if not resultaten:
+                titels = re.findall(r'data-item-name="([^"]+)"', html)
+                links = re.findall(r'href="(/nl/auto/[^"]+)"', html)
+                prijzen = re.findall(r'"price"\s*:\s*(\d+)', html)
+                for i, titel in enumerate(titels[:20]):
+                    link = f"https://www.autoscout24.nl{links[i]}" if i < len(links) else ""
+                    prijs = int(prijzen[i]) if i < len(prijzen) else None
+                    if titel and link:
+                        resultaten.append({"titel": titel, "prijs": prijs, "url": link,
+                                           "bron": "Autoscout24.nl", "jaar": None,
+                                           "brandstof_adv": None})
+    except Exception as e:
+        print(f"Autoscout24 fout: {e}")
+    return resultaten
+
+def zoek_matcht(zoek, r):
+    titel_l = r["titel"].lower()
     merk = (zoek.get("merk") or "").lower()
     model = (zoek.get("type_model") or "").lower()
+    brandstof_zoek = (zoek.get("brandstof") or "").lower()
+    bouwjaar_van = zoek.get("bouwjaar_van")
+    bouwjaar_tot = zoek.get("bouwjaar_tot")
+
     if merk and merk not in titel_l and normaliseer_merk(merk) not in titel_l:
         return False
     if model and not any(w in titel_l for w in model.split() if len(w) > 2):
         return False
+
+    # Bouwjaar filter op basis van jaar attribuut
+    jaar = r.get("jaar")
+    if jaar:
+        if bouwjaar_van and jaar < bouwjaar_van:
+            return False
+        if bouwjaar_tot and jaar > bouwjaar_tot:
+            return False
+
+    # Brandstof filter
+    if brandstof_zoek and r.get("brandstof_adv"):
+        synoniemen = BRANDSTOF_MAP.get(brandstof_zoek, [brandstof_zoek])
+        if not any(s in r["brandstof_adv"] for s in synoniemen):
+            return False
+
     return True
 
+def sla_advertentie_op(zoek, r):
+    url_hash = hashlib.md5(r["url"].encode()).hexdigest()
+    if supabase_get(f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}"):
+        return False
+    insert = {"zoekopdracht_id": zoek["id"], "titel": r["titel"], "url": r["url"],
+              "url_hash": url_hash, "site": r["bron"], "merk": zoek.get("merk", ""),
+              "type_model": zoek.get("type_model", ""), "status": "actief",
+              "gevonden_op": datetime.utcnow().isoformat()}
+    if r.get("prijs") is not None:
+        insert["prijs"] = r["prijs"]
+    return bool(supabase_post_raw("advertenties", insert))
+
 def scrape_voor_zoekopdracht(zoek):
-    alle = scrape_marktplaats(zoek.get("merk",""), zoek.get("type_model",""),
-                               zoek.get("bouwjaar_van"), zoek.get("bouwjaar_tot"), zoek.get("brandstof"))
+    merk = zoek.get("merk", "")
+    model = zoek.get("type_model", "")
+    jaarvan = zoek.get("bouwjaar_van")
+    jaartot = zoek.get("bouwjaar_tot")
+    brandstof = zoek.get("brandstof")
+
+    alle = []
+    alle += scrape_marktplaats(merk, model, jaarvan, jaartot, brandstof)
+    alle += scrape_gaspedaal(merk, model, jaarvan, jaartot, brandstof)
+    alle += scrape_autoscout(merk, model, jaarvan, jaartot, brandstof)
+
     nieuwe = 0
     for r in alle:
-        if not zoek_matcht(zoek, r["titel"]): continue
-        url_hash = hashlib.md5(r["url"].encode()).hexdigest()
-        if supabase_get(f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}"): continue
-        insert = {"zoekopdracht_id": zoek["id"], "titel": r["titel"], "url": r["url"],
-                  "url_hash": url_hash, "site": r["bron"], "merk": zoek.get("merk",""),
-                  "type_model": zoek.get("type_model",""), "status": "actief",
-                  "gevonden_op": datetime.utcnow().isoformat()}
-        if r.get("prijs") is not None: insert["prijs"] = r["prijs"]
-        if supabase_post_raw("advertenties", insert): nieuwe += 1
-    print(f"Directe scan: {nieuwe} nieuwe advertenties voor {zoek.get('merk','')} {zoek.get('type_model','')}")
+        if not zoek_matcht(zoek, r):
+            continue
+        if sla_advertentie_op(zoek, r):
+            nieuwe += 1
+
+    print(f"Scan klaar: {nieuwe} nieuw van {len(alle)} totaal voor {merk} {model}")
 
 
 class ZoekopdachtModel(BaseModel):
@@ -379,7 +525,8 @@ class ZoekopdachtModel(BaseModel):
 @app.get("/", response_class=HTMLResponse)
 async def root():
     return HTMLResponse(content=HTML, media_type="text/html; charset=utf-8",
-                        headers={"Cache-Control": "no-cache, no-store, must-revalidate", "Pragma": "no-cache"})
+                        headers={"Cache-Control": "no-cache, no-store, must-revalidate",
+                                 "Pragma": "no-cache"})
 
 @app.get("/api/health")
 async def health():
@@ -409,13 +556,19 @@ async def get_dashboard(email: str):
         gebruiker = supabase.table("gebruikers").select("id").eq("email", email).execute()
         if not gebruiker.data: return {"zoekopdrachten": []}
         gebruiker_id = gebruiker.data[0]["id"]
-        zoekopdrachten = supabase.table("zoekopdrachten").select("*").eq("gebruiker_id", gebruiker_id).eq("status", "actief").execute().data
+        zoekopdrachten = supabase.table("zoekopdrachten").select("*").eq(
+            "gebruiker_id", gebruiker_id).eq("status", "actief").execute().data
         resultaat = []
         for zoek in zoekopdrachten:
-            advertenties = supabase.table("advertenties").select("id,titel,prijs,url,site,gevonden_op").eq("zoekopdracht_id", zoek["id"]).eq("status", "actief").order("gevonden_op", desc=True).limit(100).execute().data
-            resultaat.append({"id": zoek["id"], "merk": zoek.get("merk",""), "type_model": zoek.get("type_model",""),
-                               "brandstof": zoek.get("brandstof",""), "bouwjaar_van": zoek.get("bouwjaar_van"),
-                               "bouwjaar_tot": zoek.get("bouwjaar_tot"), "advertenties": advertenties})
+            advertenties = supabase.table("advertenties").select(
+                "id,titel,prijs,url,site,gevonden_op").eq("zoekopdracht_id", zoek["id"]).eq(
+                "status", "actief").order("gevonden_op", desc=True).limit(100).execute().data
+            resultaat.append({"id": zoek["id"], "merk": zoek.get("merk", ""),
+                               "type_model": zoek.get("type_model", ""),
+                               "brandstof": zoek.get("brandstof", ""),
+                               "bouwjaar_van": zoek.get("bouwjaar_van"),
+                               "bouwjaar_tot": zoek.get("bouwjaar_tot"),
+                               "advertenties": advertenties})
         return {"zoekopdrachten": resultaat}
     except Exception as e:
         print(f"Dashboard fout: {e}")
@@ -428,9 +581,10 @@ async def maak_zoekopdracht(data: ZoekopdachtModel, background_tasks: Background
         gebruiker = supabase.table("gebruikers").select("id").eq("email", data.email).execute()
         if not gebruiker.data: raise HTTPException(404, "Registreer eerst")
         zoek = supabase.table("zoekopdrachten").insert({
-            "gebruiker_id": gebruiker.data[0]["id"], "merk": data.merk, "type_model": data.type_model,
-            "brandstof": data.brandstof, "bouwjaar_van": data.bouwjaar_van,
-            "bouwjaar_tot": data.bouwjaar_tot, "status": "actief"
+            "gebruiker_id": gebruiker.data[0]["id"], "merk": data.merk,
+            "type_model": data.type_model, "brandstof": data.brandstof,
+            "bouwjaar_van": data.bouwjaar_van, "bouwjaar_tot": data.bouwjaar_tot,
+            "status": "actief"
         }).execute()
         zoek_data = zoek.data[0]
         background_tasks.add_task(scrape_voor_zoekopdracht, zoek_data)
@@ -454,14 +608,17 @@ async def verwijder_zoekopdracht(zoek_id: str):
 async def get_advertenties(zoekopdracht_id: str):
     if not supabase: return []
     try:
-        return supabase.table("advertenties").select("*").eq("zoekopdracht_id", zoekopdracht_id).eq("status", "actief").order("gevonden_op", desc=True).execute().data
+        return supabase.table("advertenties").select("*").eq(
+            "zoekopdracht_id", zoekopdracht_id).eq(
+            "status", "actief").order("gevonden_op", desc=True).execute().data
     except Exception: return []
 
 @app.get("/api/hotlist")
 async def get_hotlist():
     if not supabase: return []
     try:
-        return supabase.table("hotlist_statistieken").select("*").order("aantal_zoekers", desc=True).limit(10).execute().data
+        return supabase.table("hotlist_statistieken").select("*").order(
+            "aantal_zoekers", desc=True).limit(10).execute().data
     except Exception: return []
 
 handler = Mangum(app)
