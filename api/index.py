@@ -1,10 +1,10 @@
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import HTMLResponse
 from pydantic import BaseModel, EmailStr
 from typing import Optional
 from mangum import Mangum
-import os, httpx
+import os, httpx, re, hashlib, asyncio
 from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
@@ -27,6 +27,163 @@ if SUPABASE_URL and SUPABASE_KEY:
 HTML_PATH = os.path.join(os.path.dirname(__file__), "..", "static", "index.html")
 HTML = open(HTML_PATH, encoding="utf-8").read() if os.path.exists(HTML_PATH) else "<h1>Automotive24</h1>"
 
+
+# ─── SCRAPER FUNCTIES ───────────────────────────────────────────
+
+def supabase_get(path):
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
+    r = httpx.get(f"{SUPABASE_URL}/rest/v1/{path}", headers=headers, timeout=15)
+    return r.json() if r.status_code < 300 else []
+
+def supabase_post(path, data):
+    headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
+               "Content-Type": "application/json", "Prefer": "return=representation"}
+    r = httpx.post(f"{SUPABASE_URL}/rest/v1/{path}", headers=headers, json=data, timeout=15)
+    if r.status_code >= 300:
+        print(f"Insert fout [{r.status_code}]: {r.text}")
+        return []
+    return r.json()
+
+def normaliseer_merk(merk):
+    if not merk:
+        return ""
+    mapping = {
+        "vw": "volkswagen", "mercedes": "mercedes-benz", "bmw": "bmw",
+        "audi": "audi", "ford": "ford", "opel": "opel", "toyota": "toyota",
+        "honda": "honda", "renault": "renault", "peugeot": "peugeot",
+        "skoda": "skoda", "seat": "seat", "kia": "kia", "hyundai": "hyundai",
+        "nissan": "nissan", "mazda": "mazda", "volvo": "volvo", "fiat": "fiat",
+        "dacia": "dacia", "mitsubishi": "mitsubishi", "suzuki": "suzuki",
+        "porsche": "porsche", "tesla": "tesla", "citroen": "citroën",
+        "citroën": "citroën", "alfa romeo": "alfa romeo"
+    }
+    return mapping.get(merk.strip().lower(), merk.strip().lower())
+
+def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
+    resultaten = []
+    try:
+        params = {"query": f"{merk} {model}".strip(), "categoryId": "91", "l1CategoryId": "91"}
+        if bouwjaar_van:
+            params["constructionYearFrom"] = str(bouwjaar_van)
+        if bouwjaar_tot:
+            params["constructionYearTo"] = str(bouwjaar_tot)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json"}
+        r = httpx.get("https://www.marktplaats.nl/lrp/api/search", params=params, headers=headers, timeout=20, follow_redirects=True)
+        if r.status_code == 200:
+            for item in r.json().get("listings", [])[:15]:
+                titel = item.get("title", "")
+                prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
+                prijs_int = prijs_cents // 100 if prijs_cents else None
+                item_id = item.get("itemId", "")
+                adv_url = f"https://www.marktplaats.nl/v/m{item_id}" if item_id else ""
+                if titel and adv_url:
+                    resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url, "bron": "Marktplaats.nl"})
+    except Exception as e:
+        print(f"Marktplaats fout: {e}")
+    return resultaten
+
+def scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot):
+    resultaten = []
+    try:
+        url = f"https://www.gaspedaal.nl/{normaliseer_merk(merk).replace(' ', '-')}"
+        if model:
+            url += f"/{model.lower().replace(' ', '-')}"
+        params = {}
+        if bouwjaar_van:
+            params["bouwjaar_van"] = str(bouwjaar_van)
+        if bouwjaar_tot:
+            params["bouwjaar_tot"] = str(bouwjaar_tot)
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"}
+        r = httpx.get(url, params=params, headers=headers, timeout=20, follow_redirects=True)
+        if r.status_code == 200:
+            html = r.text
+            links = re.findall(r'href="(https://www\.gaspedaal\.nl/[^"]+/[0-9]+)"', html)
+            prijzen = re.findall(r'€\s*([\d\.]+)', html)
+            titels = re.findall(r'<h2[^>]*>([^<]+)</h2>', html)
+            for i, link in enumerate(links[:10]):
+                prijs_tekst = prijzen[i] if i < len(prijzen) else None
+                prijs_int = int(re.sub(r'[^\d]', '', prijs_tekst)) if prijs_tekst else None
+                titel = titels[i].strip() if i < len(titels) else f"{merk} {model}"
+                resultaten.append({"titel": titel, "prijs": prijs_int, "url": link, "bron": "Gaspedaal.nl"})
+    except Exception as e:
+        print(f"Gaspedaal fout: {e}")
+    return resultaten
+
+def scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot):
+    resultaten = []
+    try:
+        merk_slug = normaliseer_merk(merk).replace(" ", "-").replace("ë", "e")
+        params = {"make": merk_slug, "sort": "standard", "desc": "0", "ustate": "N,U", "size": "15", "page": "1", "cy": "NL", "atype": "C"}
+        if model:
+            params["model"] = model.lower().replace(" ", "-")
+        if bouwjaar_van:
+            params["fregfrom"] = f"{bouwjaar_van}-01"
+        if bouwjaar_tot:
+            params["fregto"] = f"{bouwjaar_tot}-12"
+        headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept-Language": "nl-NL,nl;q=0.9"}
+        r = httpx.get("https://www.autoscout24.nl/lst", params=params, headers=headers, timeout=20, follow_redirects=True)
+        if r.status_code == 200:
+            items = re.findall(r'"url":"(/auto/[^"]+)".*?"price":"([^"]+)".*?"title":"([^"]+)"', r.text)
+            for item in items[:10]:
+                adv_url = f"https://www.autoscout24.nl{item[0]}"
+                prijs_str = re.sub(r'[^\d]', '', item[1])
+                prijs_int = int(prijs_str) if prijs_str else None
+                resultaten.append({"titel": item[2], "prijs": prijs_int, "url": adv_url, "bron": "Autoscout24.nl"})
+    except Exception as e:
+        print(f"Autoscout24 fout: {e}")
+    return resultaten
+
+def zoek_matcht(zoek, titel):
+    titel_l = titel.lower()
+    merk = (zoek.get("merk") or "").lower()
+    model = (zoek.get("type_model") or "").lower()
+    if merk and merk not in titel_l and normaliseer_merk(merk) not in titel_l:
+        return False
+    if model:
+        if not any(w in titel_l for w in model.split() if len(w) > 2):
+            return False
+    return True
+
+def scrape_voor_zoekopdracht(zoek):
+    merk = zoek.get("merk", "")
+    model = zoek.get("type_model", "")
+    bouwjaar_van = zoek.get("bouwjaar_van")
+    bouwjaar_tot = zoek.get("bouwjaar_tot")
+
+    alle = []
+    alle += scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, zoek.get("brandstof"))
+    alle += scrape_gaspedaal(merk, model, bouwjaar_van, bouwjaar_tot)
+    alle += scrape_autoscout(merk, model, bouwjaar_van, bouwjaar_tot)
+
+    nieuwe = 0
+    for r in alle:
+        if not zoek_matcht(zoek, r["titel"]):
+            continue
+        url_hash = hashlib.md5(r["url"].encode()).hexdigest()
+        bestaand = supabase_get(f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}")
+        if bestaand:
+            continue
+        insert_data = {
+            "zoekopdracht_id": zoek["id"],
+            "titel": r["titel"],
+            "url": r["url"],
+            "url_hash": url_hash,
+            "site": r["bron"],
+            "merk": merk,
+            "type_model": model,
+            "status": "actief",
+            "gevonden_op": datetime.utcnow().isoformat()
+        }
+        if r.get("prijs") is not None:
+            insert_data["prijs"] = r["prijs"]
+        resultaat = supabase_post("advertenties", insert_data)
+        if resultaat:
+            nieuwe += 1
+            print(f"Nieuw: {r['titel']} — {r['bron']}")
+    print(f"Zoekopdracht {zoek['id']}: {nieuwe} nieuwe advertenties")
+
+
+# ─── API ENDPOINTS ───────────────────────────────────────────────
 
 class ZoekopdachtModel(BaseModel):
     email: EmailStr
@@ -68,7 +225,6 @@ async def registreer(email: str):
 
 @app.get("/api/gebruikers/{email}/dashboard")
 async def get_dashboard(email: str):
-    """Haalt alle zoekopdrachten + advertenties op voor een gebruiker."""
     if not supabase:
         return {"zoekopdrachten": []}
     try:
@@ -96,7 +252,7 @@ async def get_dashboard(email: str):
 
 
 @app.post("/api/zoekopdrachten")
-async def maak_zoekopdracht(data: ZoekopdachtModel):
+async def maak_zoekopdracht(data: ZoekopdachtModel, background_tasks: BackgroundTasks):
     if not supabase:
         return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
     try:
@@ -112,10 +268,14 @@ async def maak_zoekopdracht(data: ZoekopdachtModel):
             "bouwjaar_tot": data.bouwjaar_tot,
             "status": "actief"
         }).execute()
-        return {"status": "aangemaakt", "zoekopdracht": zoek.data[0]}
+        zoek_data = zoek.data[0]
+        # Direct scrapen op de achtergrond
+        background_tasks.add_task(scrape_voor_zoekopdracht, zoek_data)
+        return {"status": "aangemaakt", "zoekopdracht": zoek_data}
     except HTTPException:
         raise
-    except Exception:
+    except Exception as e:
+        print(f"Zoekopdracht fout: {e}")
         return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
 
 
