@@ -121,7 +121,7 @@ def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
                     prijs_int = prijs_cents // 100 if prijs_cents else None
                     prijs_tekst = f"€{prijs_int:,}".replace(",", ".") if prijs_int else "Vraagprijs onbekend"
                     item_id = item.get("itemId", "")
-                    adv_url = f"https://www.marktplaats.nl/v/m{item_id}" if item_id else ""
+                    adv_url = item.get("vipUrl", "") or f"https://www.marktplaats.nl/v/m{item_id}"
                     if titel and adv_url:
                         resultaten.append({
                             "titel": titel,
