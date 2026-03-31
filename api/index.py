@@ -184,7 +184,10 @@ input:focus,select:focus{border-color:#1565C0;background:white}
           <label>Bouwjaar van / tot</label>
           <div class="row2"><select id="f-jaar-van"></select><select id="f-jaar-tot"></select></div>
           <div class="info-box blauw" style="margin-top:12px">Direct resultaten van Marktplaats, Gaspedaal en Autoscout24 &mdash; daarna elk uur opnieuw gescand.</div>
-          <button class="btn" id="start-btn" onclick="startZoek()">&#128269; Zoekopdracht starten</button>
+          <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px">
+            <button class="btn" id="start-btn" onclick="startZoek()" style="margin-top:0">&#128269; Zoekopdracht starten</button>
+            <button onclick="wisFormulier()" style="padding:13px 16px;background:#eee;color:#555;border:.5px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;white-space:nowrap">&#10005; Wis</button>
+          </div>
         </div>
         <div class="card">
           <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Gescande websites</div>
@@ -251,6 +254,7 @@ var huidigEmail=localStorage.getItem('a24_email')||'';
 var dashboardData=[];
 var gekozenPlan='maand';
 var refreshInterval=null,refreshTimer=null,refreshSecs=0;
+function wisFormulier(){document.getElementById('f-merk').selectedIndex=0;document.getElementById('f-brandstof').selectedIndex=0;document.getElementById('f-type').value='';document.getElementById('f-jaar-van').selectedIndex=0;document.getElementById('f-jaar-tot').selectedIndex=0;}
 function vulJaren(){var vf=document.getElementById('f-jaar-van'),vt=document.getElementById('f-jaar-tot'),nu=new Date().getFullYear();vf.innerHTML='<option value="">Van</option>';vt.innerHTML='<option value="">Tot</option>';for(var j=nu;j>=1940;j--){vf.innerHTML+='<option value="'+j+'">'+j+'</option>';vt.innerHTML+='<option value="'+j+'">'+j+'</option>';}}
 function inloggen(){var email=document.getElementById('login-email').value.trim();if(!email||!email.includes('@')){alert('Vul een geldig e-mailadres in');return;}huidigEmail=email;localStorage.setItem('a24_email',email);fetch(API+'/api/gebruikers/registreer?email='+encodeURIComponent(email),{method:'POST'}).catch(function(){});toonApp();}
 function toonApp(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('s-app').classList.add('active');document.getElementById('nav-email').textContent=huidigEmail;laadDashboard();laadHotlist();}
