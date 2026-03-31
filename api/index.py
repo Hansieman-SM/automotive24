@@ -78,18 +78,13 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .hot-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer}
 .hot-rank{font-size:15px;font-weight:700;color:#1565C0;width:22px;flex-shrink:0}
 .hot-rank.top{color:#E65100}
-.hot-body{flex:1}
-.hot-merk{font-size:13px;font-weight:600;color:#222}
-.hot-detail{font-size:11px;color:#888}
-.hot-count{text-align:right}
-.hot-num{font-size:14px;font-weight:700;color:#1565C0}
-.hot-lbl{font-size:9px;color:#aaa}
+.hot-body{flex:1}.hot-merk{font-size:13px;font-weight:600;color:#222}.hot-detail{font-size:11px;color:#888}
+.hot-count{text-align:right}.hot-num{font-size:14px;font-weight:700;color:#1565C0}.hot-lbl{font-size:9px;color:#aaa}
 .bijz{background:white;border-radius:10px;border:.5px solid #D1C4E9;padding:12px;margin-bottom:8px}
 .bijz-title{font-size:13px;font-weight:600;color:#4527A0;margin-bottom:2px}
 .bijz-detail{font-size:11px;color:#888;margin-bottom:6px}
 .bijz-bottom{display:flex;justify-content:space-between;align-items:center}
-.bijz-budget{font-size:12px;font-weight:600;color:#1565C0}
-.bijz-watchers{font-size:10px;color:#aaa}
+.bijz-budget{font-size:12px;font-weight:600;color:#1565C0}.bijz-watchers{font-size:10px;color:#aaa}
 .info-box{border-radius:8px;padding:10px 12px;font-size:12px;line-height:1.6;margin-bottom:12px}
 .info-box.blauw{background:#E8F0FE;color:#1A3C8F;border-left:3px solid #1565C0;border-radius:0 8px 8px 0}
 .sites{display:flex;flex-wrap:wrap;gap:5px;margin-top:8px}
@@ -112,9 +107,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .btn-del{background:#FFEBEE;color:#C62828;border:none}
 .sec-title{font-size:14px;font-weight:600;color:#222;margin-bottom:10px}
 .data-rij{display:flex;justify-content:space-between;padding:8px 0;border-bottom:.5px solid #EEE;font-size:13px}
-.data-label{color:#888}
-.data-val{font-weight:600;color:#222}
-.data-val.groen{color:#2E7D32}
+.data-label{color:#888}.data-val{font-weight:600;color:#222}.data-val.groen{color:#2E7D32}
 .onboard{text-align:center;padding:40px 20px}
 .onboard-icon{font-size:48px;margin-bottom:16px}
 .onboard-title{font-size:22px;font-weight:700;color:#0D47A1;margin-bottom:8px}
@@ -138,7 +131,6 @@ input:focus,select:focus{border-color:#1565C0;background:white}
         <input type="email" id="login-email" placeholder="jouw@email.nl" onkeydown="if(event.key==='Enter')inloggen()" />
         <div style="background:#E8F0FE;border-radius:8px;padding:10px 12px;margin:12px 0;font-size:12px;color:#1A3C8F">Eerste 24 uur gratis &mdash; geen wachtwoord nodig</div>
         <button class="btn" onclick="inloggen()">Doorgaan</button>
-        <div style="text-align:center;margin-top:12px;font-size:11px;color:#aaa">Daarna &euro;1/dag of &euro;15/mnd</div>
       </div>
     </div>
   </div>
@@ -183,10 +175,10 @@ input:focus,select:focus{border-color:#1565C0;background:white}
           <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, A6..."/>
           <label>Bouwjaar van / tot</label>
           <div class="row2"><select id="f-jaar-van"></select><select id="f-jaar-tot"></select></div>
-          <div class="info-box blauw" style="margin-top:12px">Direct resultaten van Marktplaats, Gaspedaal en Autoscout24 &mdash; daarna elk uur opnieuw gescand.</div>
+          <div class="info-box blauw" style="margin-top:12px">Resultaten verschijnen direct &mdash; daarna elk uur opnieuw gescand op Marktplaats, Gaspedaal en Autoscout24.</div>
           <div style="display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:14px">
             <button class="btn" id="start-btn" onclick="startZoek()" style="margin-top:0">&#128269; Zoekopdracht starten</button>
-            <button onclick="wisFormulier()" style="padding:13px 16px;background:#eee;color:#555;border:.5px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer;white-space:nowrap">&#10005; Wis</button>
+            <button onclick="wisFormulier()" style="padding:13px 16px;background:#eee;color:#555;border:.5px solid #ddd;border-radius:10px;font-size:13px;cursor:pointer">&#10005; Wis</button>
           </div>
         </div>
         <div class="card">
@@ -261,10 +253,10 @@ function toonApp(){document.querySelectorAll('.screen').forEach(function(s){s.cl
 function naarAccount(){document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('s-account').classList.add('active');document.getElementById('acc-email').textContent=huidigEmail;document.getElementById('acc-zoek').textContent=dashboardData.length;}
 function uitloggen(){localStorage.removeItem('a24_email');huidigEmail='';dashboardData=[];stopRefresh();document.querySelectorAll('.screen').forEach(function(s){s.classList.remove('active');});document.getElementById('s-welkom').classList.add('active');}
 function showTab(name,btn){['resultaten','zoeken','hotlist','bijzonder'].forEach(function(t){var el=document.getElementById('tab-'+t);if(el)el.style.display='none';});document.querySelectorAll('.tab').forEach(function(t){t.classList.remove('active');});var tab=document.getElementById('tab-'+name);if(tab)tab.style.display='block';if(btn)btn.classList.add('active');if(name==='hotlist')laadHotlist();if(name==='zoeken')renderZoekLijst();}
-function startAutoRefresh(){stopRefresh();var bar=document.getElementById('refresh-bar'),cd=document.getElementById('refresh-countdown');bar.style.display='block';refreshSecs=15;cd.textContent=refreshSecs;refreshInterval=setInterval(function(){refreshSecs--;cd.textContent=refreshSecs;if(refreshSecs<=0){laadDashboard();refreshSecs=15;cd.textContent=refreshSecs;}},1000);refreshTimer=setTimeout(function(){stopRefresh();},180000);}
+function startAutoRefresh(){stopRefresh();var bar=document.getElementById('refresh-bar'),cd=document.getElementById('refresh-countdown');bar.style.display='block';refreshSecs=8;cd.textContent=refreshSecs;refreshInterval=setInterval(function(){refreshSecs--;cd.textContent=refreshSecs;if(refreshSecs<=0){laadDashboard();refreshSecs=8;cd.textContent=refreshSecs;}},1000);refreshTimer=setTimeout(function(){stopRefresh();},120000);}
 function stopRefresh(){if(refreshInterval){clearInterval(refreshInterval);refreshInterval=null;}if(refreshTimer){clearTimeout(refreshTimer);refreshTimer=null;}var bar=document.getElementById('refresh-bar');if(bar)bar.style.display='none';}
 function laadDashboard(){var reslist=document.getElementById('resultaten-list');if(!dashboardData.length)reslist.innerHTML='<div class="laden">Laden...</div>';fetch(API+'/api/gebruikers/'+encodeURIComponent(huidigEmail)+'/dashboard').then(function(r){return r.json();}).then(function(data){dashboardData=data.zoekopdrachten||[];renderResultaten();renderZoekLijst();}).catch(function(){if(!dashboardData.length)reslist.innerHTML='<div class="onboard"><div class="onboard-icon">&#9888;</div><div class="onboard-title">Kon niet laden</div><button class="btn" onclick="laadDashboard()">Opnieuw</button></div>';});}
-function renderResultaten(){var reslist=document.getElementById('resultaten-list');if(!dashboardData.length){reslist.innerHTML='<div class="onboard"><div class="onboard-icon">&#128269;</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';return;}var html=dashboardData.map(function(zoek){var brandstof=zoek.brandstof||'';var jaren=zoek.bouwjaar_van&&zoek.bouwjaar_tot?zoek.bouwjaar_van+'\u2013'+zoek.bouwjaar_tot:zoek.bouwjaar_van?'vanaf '+zoek.bouwjaar_van:zoek.bouwjaar_tot?'tot '+zoek.bouwjaar_tot:'';var meta=[brandstof,jaren].filter(Boolean).join(' \u00b7 ');var advs=zoek.advertenties||[];var advHtml=advs.length?advs.map(function(adv){var prijs=adv.prijs?'\u20ac'+Number(adv.prijs).toLocaleString('nl-NL'):'Prijs onbekend';var site=adv.site||'';var datum=adv.gevonden_op?new Date(adv.gevonden_op).toLocaleDateString('nl-NL'):'';var url=adv.url||'#';return'<a href="'+url+'" target="_blank" rel="noopener" class="adv-link-rij"><div class="adv-item"><div style="flex:1"><div class="adv-titel">'+(adv.titel||'')+'</div><div class="adv-meta-txt">'+site+(datum?' \u00b7 '+datum:'')+'</div></div><div style="display:flex;align-items:center"><div class="adv-prijs">'+prijs+'</div><div class="adv-arrow">\u203a</div></div></div></a>';}).join(''):'<div class="scanning"><span class="scanning-dot">&#128260;</span> Aan het zoeken op 3 sites \u2014 resultaten verschijnen hier zo</div>';return'<div class="zoek-blok"><div class="zoek-header-blok"><div><div class="zoek-naam">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>'+(meta?'<div class="zoek-meta">'+meta+'</div>':'')+' </div><div><div class="zoek-count">'+advs.length+'</div><div class="zoek-count-lbl">resultaten</div></div></div>'+advHtml+'</div>';}).join('');reslist.innerHTML=html;}
+function renderResultaten(){var reslist=document.getElementById('resultaten-list');if(!dashboardData.length){reslist.innerHTML='<div class="onboard"><div class="onboard-icon">&#128269;</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';return;}var html=dashboardData.map(function(zoek){var brandstof=zoek.brandstof||'';var jaren=zoek.bouwjaar_van&&zoek.bouwjaar_tot?zoek.bouwjaar_van+'\u2013'+zoek.bouwjaar_tot:zoek.bouwjaar_van?'vanaf '+zoek.bouwjaar_van:zoek.bouwjaar_tot?'tot '+zoek.bouwjaar_tot:'';var meta=[brandstof,jaren].filter(Boolean).join(' \u00b7 ');var advs=zoek.advertenties||[];var advHtml=advs.length?advs.map(function(adv){var prijs=adv.prijs?'\u20ac'+Number(adv.prijs).toLocaleString('nl-NL'):'Prijs onbekend';var site=adv.site||'';var datum=adv.gevonden_op?new Date(adv.gevonden_op).toLocaleDateString('nl-NL'):'';return'<a href="'+(adv.url||'#')+'" target="_blank" rel="noopener" class="adv-link-rij"><div class="adv-item"><div style="flex:1"><div class="adv-titel">'+(adv.titel||'')+'</div><div class="adv-meta-txt">'+site+(datum?' \u00b7 '+datum:'')+'</div></div><div style="display:flex;align-items:center"><div class="adv-prijs">'+prijs+'</div><div class="adv-arrow">\u203a</div></div></div></a>';}).join(''):'<div class="scanning"><span class="scanning-dot">&#128260;</span> Aan het zoeken \u2014 resultaten verschijnen hier zo</div>';return'<div class="zoek-blok"><div class="zoek-header-blok"><div><div class="zoek-naam">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>'+(meta?'<div class="zoek-meta">'+meta+'</div>':'')+' </div><div><div class="zoek-count">'+advs.length+'</div><div class="zoek-count-lbl">resultaten</div></div></div>'+advHtml+'</div>';}).join('');reslist.innerHTML=html;}
 function renderZoekLijst(){var list=document.getElementById('zoek-list');if(!list)return;if(!dashboardData.length){list.innerHTML='';return;}list.innerHTML=dashboardData.map(function(zoek){var jaren=zoek.bouwjaar_van&&zoek.bouwjaar_tot?zoek.bouwjaar_van+'\u2013'+zoek.bouwjaar_tot:'Alle jaren';return'<div class="zoek-item"><div class="zoek-item-header"><div><div class="zoek-item-merk">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div><div class="zoek-item-detail">'+(zoek.brandstof||'-')+' \u00b7 '+jaren+'</div></div><span class="badge badge-groen">Actief</span></div><div class="zoek-item-actions"><button class="btn-sm btn-del" onclick="verwijderZoek(\''+zoek.id+'\')">Verwijderen</button></div></div>';}).join('');}
 function startZoek(){var merk=document.getElementById('f-merk').value,type=document.getElementById('f-type').value;if(!merk&&!type){alert('Vul minimaal een merk of type in');return;}var brandstof=document.getElementById('f-brandstof').value,jaarVan=document.getElementById('f-jaar-van').value,jaarTot=document.getElementById('f-jaar-tot').value,btn=document.getElementById('start-btn');btn.disabled=true;btn.textContent='&#128269; Zoeken gestart...';fetch(API+'/api/zoekopdrachten',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email:huidigEmail,merk:merk||null,type_model:type||null,brandstof:brandstof?brandstof.toLowerCase():null,bouwjaar_van:jaarVan?parseInt(jaarVan):null,bouwjaar_tot:jaarTot?parseInt(jaarTot):null})}).then(function(r){return r.json();}).then(function(){btn.disabled=false;btn.textContent='&#128269; Zoekopdracht starten';showTab('resultaten',document.querySelectorAll('.tab')[0]);laadDashboard();startAutoRefresh();}).catch(function(){btn.disabled=false;btn.textContent='&#128269; Zoekopdracht starten';alert('Er ging iets mis. Probeer opnieuw.');});}
 function verwijderZoek(id){if(!confirm('Zoekopdracht verwijderen?'))return;fetch(API+'/api/zoekopdrachten/'+id,{method:'DELETE'}).then(function(){laadDashboard();}).catch(function(){});}
@@ -282,6 +274,21 @@ if(huidigEmail){toonApp();}
 </html>"""
 
 
+def trigger_github_scraper():
+    if not GITHUB_TOKEN:
+        print("Geen GitHub token")
+        return
+    try:
+        r = httpx.post(
+            f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/scraper.yml/dispatches",
+            headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"},
+            json={"ref": "main"}, timeout=15
+        )
+        print(f"GitHub trigger: {r.status_code}")
+    except Exception as e:
+        print(f"GitHub trigger fout: {e}")
+
+
 def supabase_get(path):
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}"}
     r = httpx.get(f"{SUPABASE_URL}/rest/v1/{path}", headers=headers, timeout=15)
@@ -291,81 +298,45 @@ def supabase_post_raw(path, data):
     headers = {"apikey": SUPABASE_KEY, "Authorization": f"Bearer {SUPABASE_KEY}",
                "Content-Type": "application/json", "Prefer": "return=representation"}
     r = httpx.post(f"{SUPABASE_URL}/rest/v1/{path}", headers=headers, json=data, timeout=15)
-    if r.status_code >= 300:
-        print(f"Insert fout [{r.status_code}]: {r.text}")
-        return []
-    return r.json()
-
-def trigger_github_scraper():
-    """Trigger de GitHub Actions scraper workflow direct."""
-    if not GITHUB_TOKEN:
-        print("Geen GitHub token — scraper niet getriggerd")
-        return
-    try:
-        r = httpx.post(
-            f"https://api.github.com/repos/{GITHUB_REPO}/actions/workflows/scraper.yml/dispatches",
-            headers={"Authorization": f"Bearer {GITHUB_TOKEN}", "Accept": "application/vnd.github.v3+json"},
-            json={"ref": "main"},
-            timeout=10
-        )
-        if r.status_code == 204:
-            print("GitHub scraper getriggerd")
-        else:
-            print(f"GitHub trigger fout: {r.status_code} {r.text}")
-    except Exception as e:
-        print(f"GitHub trigger fout: {e}")
+    return r.json() if r.status_code < 300 else []
 
 def marktplaats_url(item):
-    vip_url = item.get("vipUrl", "")
+    vip = item.get("vipUrl", "")
+    if vip:
+        return f"https://www.marktplaats.nl{vip}" if vip.startswith("/") else vip
     item_id = item.get("itemId", "")
-    if vip_url:
-        if vip_url.startswith("/"):
-            return f"https://www.marktplaats.nl{vip_url}"
-        if vip_url.startswith("http"):
-            return vip_url
-    if item_id:
-        return f"https://www.marktplaats.nl/v/m{item_id.lstrip('m')}"
-    return ""
+    return f"https://www.marktplaats.nl/v/m{item_id.lstrip('m')}" if item_id else ""
 
 def normaliseer_merk(merk):
     if not merk:
         return ""
-    mapping = {"vw": "volkswagen", "mercedes": "mercedes-benz", "bmw": "bmw",
-               "audi": "audi", "ford": "ford", "opel": "opel", "toyota": "toyota",
-               "honda": "honda", "renault": "renault", "peugeot": "peugeot",
-               "skoda": "skoda", "seat": "seat", "kia": "kia", "hyundai": "hyundai",
-               "nissan": "nissan", "mazda": "mazda", "volvo": "volvo", "fiat": "fiat",
-               "dacia": "dacia", "mitsubishi": "mitsubishi", "suzuki": "suzuki",
-               "porsche": "porsche", "tesla": "tesla", "citroen": "citroën",
-               "citroën": "citroën", "alfa romeo": "alfa romeo"}
+    mapping = {"vw":"volkswagen","mercedes":"mercedes-benz","bmw":"bmw","audi":"audi","ford":"ford",
+               "opel":"opel","toyota":"toyota","honda":"honda","renault":"renault","peugeot":"peugeot",
+               "skoda":"skoda","seat":"seat","kia":"kia","hyundai":"hyundai","nissan":"nissan",
+               "mazda":"mazda","volvo":"volvo","fiat":"fiat","dacia":"dacia","mitsubishi":"mitsubishi",
+               "suzuki":"suzuki","porsche":"porsche","tesla":"tesla","citroen":"citroën","citroën":"citroën"}
     return mapping.get(merk.strip().lower(), merk.strip().lower())
 
-def scrape_marktplaats_direct(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
-    """Directe Marktplaats scrape voor Railway (werkt wel)."""
+def scrape_marktplaats(merk, model, bouwjaar_van, bouwjaar_tot, brandstof):
     resultaten = []
     try:
         for pagina in range(3):
             params = {"query": f"{merk} {model}".strip(), "categoryId": "91", "l1CategoryId": "91",
                       "limit": "30", "offset": str(pagina * 30)}
-            if bouwjaar_van:
-                params["constructionYearFrom"] = str(bouwjaar_van)
-            if bouwjaar_tot:
-                params["constructionYearTo"] = str(bouwjaar_tot)
+            if bouwjaar_van: params["constructionYearFrom"] = str(bouwjaar_van)
+            if bouwjaar_tot: params["constructionYearTo"] = str(bouwjaar_tot)
             headers = {"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36", "Accept": "application/json"}
             r = httpx.get("https://www.marktplaats.nl/lrp/api/search", params=params, headers=headers, timeout=20, follow_redirects=True)
-            if r.status_code == 200:
-                listings = r.json().get("listings", [])
-                if not listings:
-                    break
-                for item in listings:
-                    titel = item.get("title", "")
-                    prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
-                    prijs_int = prijs_cents // 100 if prijs_cents else None
-                    adv_url = marktplaats_url(item)
-                    if titel and adv_url:
-                        resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url, "bron": "Marktplaats.nl"})
-            else:
-                break
+            if r.status_code != 200: break
+            listings = r.json().get("listings", [])
+            if not listings: break
+            for item in listings:
+                titel = item.get("title", "")
+                prijs_cents = item.get("priceInfo", {}).get("priceCents", 0)
+                prijs_int = prijs_cents // 100 if prijs_cents else None
+                adv_url = marktplaats_url(item)
+                if titel and adv_url:
+                    resultaten.append({"titel": titel, "prijs": prijs_int, "url": adv_url, "bron": "Marktplaats.nl"})
     except Exception as e:
         print(f"Marktplaats fout: {e}")
     return resultaten
@@ -376,36 +347,25 @@ def zoek_matcht(zoek, titel):
     model = (zoek.get("type_model") or "").lower()
     if merk and merk not in titel_l and normaliseer_merk(merk) not in titel_l:
         return False
-    if model:
-        if not any(w in titel_l for w in model.split() if len(w) > 2):
-            return False
+    if model and not any(w in titel_l for w in model.split() if len(w) > 2):
+        return False
     return True
 
-def scrape_en_trigger(zoek):
-    """Directe Marktplaats scrape + trigger GitHub voor Gaspedaal/Autoscout24."""
-    merk = zoek.get("merk", "")
-    model = zoek.get("type_model", "")
-
-    # Marktplaats direct
-    alle = scrape_marktplaats_direct(merk, model, zoek.get("bouwjaar_van"), zoek.get("bouwjaar_tot"), zoek.get("brandstof"))
+def scrape_voor_zoekopdracht(zoek):
+    alle = scrape_marktplaats(zoek.get("merk",""), zoek.get("type_model",""),
+                               zoek.get("bouwjaar_van"), zoek.get("bouwjaar_tot"), zoek.get("brandstof"))
     nieuwe = 0
     for r in alle:
-        if not zoek_matcht(zoek, r["titel"]):
-            continue
+        if not zoek_matcht(zoek, r["titel"]): continue
         url_hash = hashlib.md5(r["url"].encode()).hexdigest()
-        if supabase_get(f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}"):
-            continue
-        insert_data = {"zoekopdracht_id": zoek["id"], "titel": r["titel"], "url": r["url"],
-                       "url_hash": url_hash, "site": r["bron"], "merk": merk, "type_model": model,
-                       "status": "actief", "gevonden_op": datetime.utcnow().isoformat()}
-        if r.get("prijs") is not None:
-            insert_data["prijs"] = r["prijs"]
-        if supabase_post_raw("advertenties", insert_data):
-            nieuwe += 1
-    print(f"Marktplaats: {nieuwe} nieuwe advertenties")
-
-    # GitHub Actions voor Gaspedaal + Autoscout24
-    trigger_github_scraper()
+        if supabase_get(f"advertenties?url_hash=eq.{url_hash}&zoekopdracht_id=eq.{zoek['id']}"): continue
+        insert = {"zoekopdracht_id": zoek["id"], "titel": r["titel"], "url": r["url"],
+                  "url_hash": url_hash, "site": r["bron"], "merk": zoek.get("merk",""),
+                  "type_model": zoek.get("type_model",""), "status": "actief",
+                  "gevonden_op": datetime.utcnow().isoformat()}
+        if r.get("prijs") is not None: insert["prijs"] = r["prijs"]
+        if supabase_post_raw("advertenties", insert): nieuwe += 1
+    print(f"Directe scan: {nieuwe} nieuwe advertenties voor {zoek.get('merk','')} {zoek.get('type_model','')}")
 
 
 class ZoekopdachtModel(BaseModel):
@@ -423,8 +383,7 @@ async def root():
 
 @app.get("/api/health")
 async def health():
-    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden",
-            "github": "ingesteld" if GITHUB_TOKEN else "niet ingesteld"}
+    return {"status": "ok", "supabase": "verbonden" if supabase else "niet verbonden"}
 
 @app.post("/api/gebruikers/registreer")
 async def registreer(email: str):
@@ -445,18 +404,17 @@ async def registreer(email: str):
 
 @app.get("/api/gebruikers/{email}/dashboard")
 async def get_dashboard(email: str):
-    if not supabase:
-        return {"zoekopdrachten": []}
+    if not supabase: return {"zoekopdrachten": []}
     try:
         gebruiker = supabase.table("gebruikers").select("id").eq("email", email).execute()
-        if not gebruiker.data:
-            return {"zoekopdrachten": []}
-        zoekopdrachten = supabase.table("zoekopdrachten").select("*").eq("gebruiker_id", gebruiker.data[0]["id"]).eq("status", "actief").execute().data
+        if not gebruiker.data: return {"zoekopdrachten": []}
+        gebruiker_id = gebruiker.data[0]["id"]
+        zoekopdrachten = supabase.table("zoekopdrachten").select("*").eq("gebruiker_id", gebruiker_id).eq("status", "actief").execute().data
         resultaat = []
         for zoek in zoekopdrachten:
             advertenties = supabase.table("advertenties").select("id,titel,prijs,url,site,gevonden_op").eq("zoekopdracht_id", zoek["id"]).eq("status", "actief").order("gevonden_op", desc=True).limit(100).execute().data
-            resultaat.append({"id": zoek["id"], "merk": zoek.get("merk", ""), "type_model": zoek.get("type_model", ""),
-                               "brandstof": zoek.get("brandstof", ""), "bouwjaar_van": zoek.get("bouwjaar_van"),
+            resultaat.append({"id": zoek["id"], "merk": zoek.get("merk",""), "type_model": zoek.get("type_model",""),
+                               "brandstof": zoek.get("brandstof",""), "bouwjaar_van": zoek.get("bouwjaar_van"),
                                "bouwjaar_tot": zoek.get("bouwjaar_tot"), "advertenties": advertenties})
         return {"zoekopdrachten": resultaat}
     except Exception as e:
@@ -465,29 +423,27 @@ async def get_dashboard(email: str):
 
 @app.post("/api/zoekopdrachten")
 async def maak_zoekopdracht(data: ZoekopdachtModel, background_tasks: BackgroundTasks):
-    if not supabase:
-        return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
+    if not supabase: return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
     try:
         gebruiker = supabase.table("gebruikers").select("id").eq("email", data.email).execute()
-        if not gebruiker.data:
-            raise HTTPException(404, "Registreer eerst")
+        if not gebruiker.data: raise HTTPException(404, "Registreer eerst")
         zoek = supabase.table("zoekopdrachten").insert({
             "gebruiker_id": gebruiker.data[0]["id"], "merk": data.merk, "type_model": data.type_model,
-            "brandstof": data.brandstof, "bouwjaar_van": data.bouwjaar_van, "bouwjaar_tot": data.bouwjaar_tot, "status": "actief"
+            "brandstof": data.brandstof, "bouwjaar_van": data.bouwjaar_van,
+            "bouwjaar_tot": data.bouwjaar_tot, "status": "actief"
         }).execute()
         zoek_data = zoek.data[0]
-        background_tasks.add_task(scrape_en_trigger, zoek_data)
+        background_tasks.add_task(scrape_voor_zoekopdracht, zoek_data)
+        background_tasks.add_task(trigger_github_scraper)
         return {"status": "aangemaakt", "zoekopdracht": zoek_data}
-    except HTTPException:
-        raise
+    except HTTPException: raise
     except Exception as e:
         print(f"Zoekopdracht fout: {e}")
         return {"status": "aangemaakt", "zoekopdracht": {"id": "test"}}
 
 @app.delete("/api/zoekopdrachten/{zoek_id}")
 async def verwijder_zoekopdracht(zoek_id: str):
-    if not supabase:
-        return {"status": "gestopt"}
+    if not supabase: return {"status": "gestopt"}
     try:
         supabase.table("zoekopdrachten").update({"status": "gestopt"}).eq("id", zoek_id).execute()
         return {"status": "gestopt"}
@@ -496,20 +452,16 @@ async def verwijder_zoekopdracht(zoek_id: str):
 
 @app.get("/api/advertenties/{zoekopdracht_id}")
 async def get_advertenties(zoekopdracht_id: str):
-    if not supabase:
-        return []
+    if not supabase: return []
     try:
         return supabase.table("advertenties").select("*").eq("zoekopdracht_id", zoekopdracht_id).eq("status", "actief").order("gevonden_op", desc=True).execute().data
-    except Exception:
-        return []
+    except Exception: return []
 
 @app.get("/api/hotlist")
 async def get_hotlist():
-    if not supabase:
-        return []
+    if not supabase: return []
     try:
         return supabase.table("hotlist_statistieken").select("*").order("aantal_zoekers", desc=True).limit(10).execute().data
-    except Exception:
-        return []
+    except Exception: return []
 
 handler = Mangum(app)
