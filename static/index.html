@@ -9,13 +9,13 @@
 body{background:#F4F6F9;color:#222;min-height:100vh}
 .screen{display:none;min-height:100vh}.screen.active{display:block}
 nav{background:#0D47A1;padding:0 16px}
-.nav-inner{max-width:600px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
+.nav-inner{max-width:640px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;height:56px}
 .nav-logo{color:white;font-size:18px;font-weight:600}
 .nav-sub{font-size:11px;color:rgba(255,255,255,.6)}
-.tabs{background:#0D47A1;display:flex;max-width:600px;margin:0 auto}
+.tabs{background:#0D47A1;display:flex;max-width:640px;margin:0 auto}
 .tab{flex:1;padding:10px 4px;border:none;background:transparent;color:rgba(255,255,255,.55);border-bottom:3px solid transparent;font-size:10px;cursor:pointer;text-transform:uppercase;letter-spacing:.5px}
 .tab.active{color:white;border-bottom:3px solid white;font-weight:600}
-.content{max-width:600px;margin:0 auto;padding:14px}
+.content{max-width:640px;margin:0 auto;padding:14px}
 .card{background:white;border-radius:12px;border:.5px solid #E0E0E0;padding:16px;margin-bottom:10px}
 .card-title{font-size:15px;font-weight:600;color:#0D47A1;margin-bottom:3px}
 .card-sub{font-size:12px;color:#888;margin-bottom:14px}
@@ -26,25 +26,27 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .btn:hover{background:#1976D2}
 .btn.groen{background:#2E7D32}
 .btn.grijs{background:#eee;color:#555;border:.5px solid #ddd;margin-top:8px}
+.btn:disabled{background:#90CAF9;cursor:not-allowed}
 .row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .badge{display:inline-block;padding:3px 8px;border-radius:20px;font-size:11px;font-weight:600}
 .badge-groen{background:#E8F5E9;color:#2E7D32}
-.badge-blauw{background:#E8F0FE;color:#1A3C8F}
-.badge-grijs{background:#F5F5F5;color:#666}
 .zoek-blok{background:white;border-radius:12px;border:.5px solid #E0E0E0;margin-bottom:16px;overflow:hidden}
 .zoek-header-blok{background:#0D47A1;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
 .zoek-naam{color:white;font-size:14px;font-weight:600}
 .zoek-meta{color:rgba(255,255,255,.7);font-size:11px;margin-top:2px}
 .zoek-count{color:white;font-size:20px;font-weight:700;text-align:right}
 .zoek-count-lbl{color:rgba(255,255,255,.7);font-size:9px}
-.adv-item{padding:12px 16px;border-bottom:.5px solid #F0F0F0;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.adv-item{padding:12px 16px;border-bottom:.5px solid #F0F0F0;display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .adv-item:last-child{border-bottom:none}
 .adv-titel{font-size:13px;font-weight:600;color:#222;margin-bottom:3px}
-.adv-meta{font-size:11px;color:#888}
-.adv-prijs{font-size:16px;font-weight:700;color:#1565C0;white-space:nowrap}
-.adv-link{display:inline-block;margin-top:6px;padding:5px 12px;background:#1565C0;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none}
+.adv-meta{font-size:11px;color:#888;margin-bottom:4px}
+.adv-prijs{font-size:16px;font-weight:700;color:#1565C0;white-space:nowrap;text-align:right}
+.adv-link{display:inline-block;margin-top:6px;padding:5px 14px;background:#1565C0;color:white;border-radius:6px;font-size:11px;font-weight:600;text-decoration:none}
 .adv-link:hover{background:#1976D2}
 .geen-adv{padding:20px 16px;text-align:center;color:#aaa;font-size:13px}
+.scanning{padding:16px;text-align:center;color:#1565C0;font-size:13px;font-weight:500}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+.scanning-dot{display:inline-block;animation:pulse 1.2s infinite}
 .hot-item{background:white;border-radius:10px;border:.5px solid #E0E0E0;padding:10px 12px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer}
 .hot-rank{font-size:15px;font-weight:700;color:#1565C0;width:22px;flex-shrink:0}
 .hot-rank.top{color:#E65100}
@@ -90,6 +92,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 .onboard-title{font-size:22px;font-weight:700;color:#0D47A1;margin-bottom:8px}
 .onboard-sub{font-size:14px;color:#666;line-height:1.6;margin-bottom:24px}
 .laden{text-align:center;padding:30px;color:#aaa;font-size:13px}
+.refresh-bar{background:#E8F0FE;padding:8px 16px;text-align:center;font-size:12px;color:#1A3C8F;display:none;font-weight:500}
 </style>
 </head>
 <body>
@@ -110,9 +113,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
           Eerste 24 uur gratis — geen wachtwoord nodig
         </div>
         <button class="btn" onclick="inloggen()">Doorgaan</button>
-        <div style="text-align:center;margin-top:12px;font-size:11px;color:#aaa">
-          Daarna €1/dag of €15/mnd — stop wanneer je wil
-        </div>
+        <div style="text-align:center;margin-top:12px;font-size:11px;color:#aaa">Daarna €1/dag of €15/mnd — stop wanneer je wil</div>
       </div>
     </div>
   </div>
@@ -135,16 +136,15 @@ input:focus,select:focus{border-color:#1565C0;background:white}
         <button class="tab" onclick="showTab('bijzonder',this)">Bijzonder</button>
       </div>
     </div>
+    <div id="refresh-bar" class="refresh-bar">🔄 Zoeken naar advertenties... vernieuwen over <span id="refresh-countdown">8</span>s</div>
     <div class="content">
       <div id="tab-resultaten">
-        <div id="resultaten-list">
-          <div class="laden">Laden...</div>
-        </div>
+        <div id="resultaten-list"><div class="laden">Laden...</div></div>
       </div>
       <div id="tab-zoeken" style="display:none">
         <div class="card">
           <div class="card-title">Nieuwe zoekopdracht</div>
-          <div class="card-sub">Meer invullen = nauwkeuriger resultaat</div>
+          <div class="card-sub">Resultaten verschijnen direct na het starten</div>
           <label>Merk</label>
           <select id="f-merk">
             <option value="">Alle merken</option>
@@ -163,12 +163,9 @@ input:focus,select:focus{border-color:#1565C0;background:white}
           <label>Type / Model</label>
           <input type="text" id="f-type" placeholder="bijv. Golf, 3-Serie, A6..."/>
           <label>Bouwjaar van / tot</label>
-          <div class="row2">
-            <select id="f-jaar-van"></select>
-            <select id="f-jaar-tot"></select>
-          </div>
-          <div class="info-box blauw" style="margin-top:12px">Elk uur scannen we Marktplaats, Gaspedaal en Autoscout24. Alleen exacte matches worden getoond.</div>
-          <button class="btn" onclick="startZoek()">Zoekopdracht starten</button>
+          <div class="row2"><select id="f-jaar-van"></select><select id="f-jaar-tot"></select></div>
+          <div class="info-box blauw" style="margin-top:12px">Resultaten verschijnen direct — daarna elk uur opnieuw gescand.</div>
+          <button class="btn" id="start-btn" onclick="startZoek()">🔍 Zoekopdracht starten</button>
         </div>
         <div class="card">
           <div style="font-size:11px;font-weight:600;color:#666;text-transform:uppercase;letter-spacing:.4px;margin-bottom:8px">Gescande websites</div>
@@ -187,7 +184,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
       </div>
       <div id="tab-bijzonder" style="display:none">
         <div class="sec-title">Bijzondere zoekopdrachten</div>
-        <div class="info-box blauw">Voor klassiekers en zeldzame modellen die niet in standaard databases staan.</div>
+        <div class="info-box blauw">Voor klassiekers en zeldzame modellen.</div>
         <div class="bijz"><div class="bijz-title">DeLorean DMC-12</div><div class="bijz-detail">1981–1982 · Rijdbaar · NL kenteken voorkeur</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €45.000–€70.000</div><div class="bijz-watchers">7 zoekers</div></div></div>
         <div class="bijz"><div class="bijz-title">Citroën DS 21 Pallas</div><div class="bijz-detail">1967–1971 · Goede staat · Gerestaureerd</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €18.000–€28.000</div><div class="bijz-watchers">12 zoekers</div></div></div>
         <div class="bijz"><div class="bijz-title">Porsche 944 Turbo</div><div class="bijz-detail">1987 · Compleet · Project toegestaan</div><div class="bijz-bottom"><div class="bijz-budget">Budget: €8.000–€15.000</div><div class="bijz-watchers">18 zoekers</div></div></div>
@@ -199,7 +196,7 @@ input:focus,select:focus{border-color:#1565C0;background:white}
 
 <div class="screen" id="s-account">
   <div style="background:#0D47A1;padding:16px">
-    <div style="max-width:600px;margin:0 auto;display:flex;align-items:center;gap:12px">
+    <div style="max-width:640px;margin:0 auto;display:flex;align-items:center;gap:12px">
       <button onclick="toonApp()" style="background:rgba(255,255,255,.15);border:none;color:white;border-radius:20px;padding:5px 12px;font-size:12px;cursor:pointer">← Terug</button>
       <span style="color:white;font-size:16px;font-weight:600">Mijn account</span>
     </div>
@@ -215,15 +212,11 @@ input:focus,select:focus{border-color:#1565C0;background:white}
       <div class="sec-title">Abonnement verlengen</div>
       <div class="plan-grid">
         <div class="plan" id="plan-dag" onclick="selectPlan('dag')">
-          <div class="plan-naam">Dag</div>
-          <div class="plan-prijs">€1</div>
-          <div class="plan-per">per 24 uur</div>
+          <div class="plan-naam">Dag</div><div class="plan-prijs">€1</div><div class="plan-per">per 24 uur</div>
           <ul class="plan-feat"><li>Alle zoekopdrachten</li><li>Elk uur scan</li><li>Dagelijks opzegbaar</li></ul>
         </div>
         <div class="plan selected" id="plan-maand" onclick="selectPlan('maand')">
-          <div class="plan-naam">Maand ⭐</div>
-          <div class="plan-prijs">€15</div>
-          <div class="plan-per">per 30 dagen</div>
+          <div class="plan-naam">Maand ⭐</div><div class="plan-prijs">€15</div><div class="plan-per">per 30 dagen</div>
           <ul class="plan-feat"><li>Alle zoekopdrachten</li><li>Elk uur scan</li><li>50% korting</li></ul>
         </div>
       </div>
@@ -242,6 +235,9 @@ var API = 'https://automotive24-production.up.railway.app';
 var huidigEmail = localStorage.getItem('a24_email') || '';
 var dashboardData = [];
 var gekozenPlan = 'maand';
+var refreshInterval = null;
+var refreshTimer = null;
+var refreshSecs = 0;
 
 function vulJaren() {
   var vf = document.getElementById('f-jaar-van');
@@ -283,6 +279,7 @@ function uitloggen() {
   localStorage.removeItem('a24_email');
   huidigEmail = '';
   dashboardData = [];
+  stopRefresh();
   document.querySelectorAll('.screen').forEach(function(s){ s.classList.remove('active'); });
   document.getElementById('s-welkom').classList.add('active');
 }
@@ -300,9 +297,35 @@ function showTab(name, btn) {
   if (name === 'zoeken') renderZoekLijst();
 }
 
+function startAutoRefresh() {
+  stopRefresh();
+  var bar = document.getElementById('refresh-bar');
+  var countdown = document.getElementById('refresh-countdown');
+  bar.style.display = 'block';
+  refreshSecs = 8;
+  countdown.textContent = refreshSecs;
+  refreshInterval = setInterval(function() {
+    refreshSecs--;
+    countdown.textContent = refreshSecs;
+    if (refreshSecs <= 0) {
+      laadDashboard();
+      refreshSecs = 8;
+      countdown.textContent = refreshSecs;
+    }
+  }, 1000);
+  refreshTimer = setTimeout(function() { stopRefresh(); }, 120000);
+}
+
+function stopRefresh() {
+  if (refreshInterval) { clearInterval(refreshInterval); refreshInterval = null; }
+  if (refreshTimer) { clearTimeout(refreshTimer); refreshTimer = null; }
+  var bar = document.getElementById('refresh-bar');
+  if (bar) bar.style.display = 'none';
+}
+
 function laadDashboard() {
   var reslist = document.getElementById('resultaten-list');
-  reslist.innerHTML = '<div class="laden">Advertenties laden...</div>';
+  if (!dashboardData.length) reslist.innerHTML = '<div class="laden">Advertenties laden...</div>';
   fetch(API + '/api/gebruikers/' + encodeURIComponent(huidigEmail) + '/dashboard')
     .then(function(r){ return r.json(); })
     .then(function(data) {
@@ -311,14 +334,14 @@ function laadDashboard() {
       renderZoekLijst();
     })
     .catch(function() {
-      reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">⚠️</div><div class="onboard-title">Kon niet laden</div><div class="onboard-sub">Controleer je verbinding en probeer opnieuw.</div><button class="btn" onclick="laadDashboard()">Opnieuw proberen</button></div>';
+      if (!dashboardData.length) reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">⚠️</div><div class="onboard-title">Kon niet laden</div><button class="btn" onclick="laadDashboard()">Opnieuw</button></div>';
     });
 }
 
 function renderResultaten() {
   var reslist = document.getElementById('resultaten-list');
   if (!dashboardData.length) {
-    reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">🔍</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen. De bot zoekt dan elk uur voor jou.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
+    reslist.innerHTML = '<div class="onboard"><div class="onboard-icon">🔍</div><div class="onboard-title">Nog geen zoekopdrachten</div><div class="onboard-sub">Ga naar Zoeken om je eerste zoekopdracht in te stellen.</div><button class="btn" onclick="showTab(\'zoeken\',document.querySelectorAll(\'.tab\')[1])">Zoekopdracht instellen</button></div>';
     return;
   }
   var html = dashboardData.map(function(zoek) {
@@ -326,47 +349,36 @@ function renderResultaten() {
     var jaren = zoek.bouwjaar_van && zoek.bouwjaar_tot ? zoek.bouwjaar_van+'–'+zoek.bouwjaar_tot : zoek.bouwjaar_van ? 'vanaf '+zoek.bouwjaar_van : zoek.bouwjaar_tot ? 'tot '+zoek.bouwjaar_tot : '';
     var meta = [brandstof, jaren].filter(Boolean).join(' · ');
     var advs = zoek.advertenties || [];
-    var advHtml = '';
-    if (!advs.length) {
-      advHtml = '<div class="geen-adv">🔄 Nog geen resultaten — de bot scant elk uur</div>';
-    } else {
-      advHtml = advs.map(function(adv) {
-        var prijs = adv.prijs ? '€' + Number(adv.prijs).toLocaleString('nl-NL') : 'Prijs onbekend';
-        var site = adv.site || '';
-        var datum = adv.gevonden_op ? new Date(adv.gevonden_op).toLocaleDateString('nl-NL') : '';
-        return '<div class="adv-item">' +
-          '<div style="flex:1">' +
-          '<div class="adv-titel">' + (adv.titel || '') + '</div>' +
-          '<div class="adv-meta">' + site + (datum ? ' · ' + datum : '') + '</div>' +
-          '<a href="' + (adv.url || '#') + '" target="_blank" class="adv-link">Bekijk advertentie →</a>' +
-          '</div>' +
-          '<div class="adv-prijs">' + prijs + '</div>' +
-          '</div>';
-      }).join('');
-    }
+    var advHtml = advs.length ? advs.map(function(adv) {
+      var prijs = adv.prijs ? '€' + Number(adv.prijs).toLocaleString('nl-NL') : 'Prijs onbekend';
+      var site = adv.site || '';
+      var datum = adv.gevonden_op ? new Date(adv.gevonden_op).toLocaleDateString('nl-NL') : '';
+      return '<div class="adv-item">' +
+        '<div style="flex:1"><div class="adv-titel">'+(adv.titel||'')+'</div>' +
+        '<div class="adv-meta">'+site+(datum?' · '+datum:'')+'</div>' +
+        '<a href="'+(adv.url||'#')+'" target="_blank" class="adv-link">Bekijk advertentie →</a></div>' +
+        '<div class="adv-prijs">'+prijs+'</div></div>';
+    }).join('') : '<div class="scanning"><span class="scanning-dot">🔄</span> Aan het zoeken — resultaten verschijnen hier zo</div>';
     return '<div class="zoek-blok">' +
       '<div class="zoek-header-blok">' +
-      '<div><div class="zoek-naam">' + (zoek.merk||'') + ' ' + (zoek.type_model||'') + '</div><div class="zoek-meta">' + meta + '</div></div>' +
-      '<div><div class="zoek-count">' + advs.length + '</div><div class="zoek-count-lbl">resultaten</div></div>' +
-      '</div>' +
-      advHtml +
-      '</div>';
+      '<div><div class="zoek-naam">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>'+(meta?'<div class="zoek-meta">'+meta+'</div>':'')+
+      '</div><div><div class="zoek-count">'+advs.length+'</div><div class="zoek-count-lbl">resultaten</div></div></div>'+
+      advHtml+'</div>';
   }).join('');
   reslist.innerHTML = html;
 }
 
 function renderZoekLijst() {
   var list = document.getElementById('zoek-list');
+  if (!list) return;
   if (!dashboardData.length) { list.innerHTML = ''; return; }
   list.innerHTML = dashboardData.map(function(zoek) {
     var jaren = zoek.bouwjaar_van && zoek.bouwjaar_tot ? zoek.bouwjaar_van+'–'+zoek.bouwjaar_tot : 'Alle jaren';
-    return '<div class="zoek-item">' +
-      '<div class="zoek-item-header">' +
-      '<div><div class="zoek-item-merk">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div><div class="zoek-item-detail">'+(zoek.brandstof||'-')+' · '+jaren+'</div></div>' +
-      '<span class="badge badge-groen">Actief</span>' +
-      '</div>' +
-      '<div class="zoek-item-actions"><button class="btn-sm btn-del" onclick="verwijderZoek(\''+zoek.id+'\')">Verwijderen</button></div>' +
-      '</div>';
+    return '<div class="zoek-item"><div class="zoek-item-header">' +
+      '<div><div class="zoek-item-merk">'+(zoek.merk||'')+' '+(zoek.type_model||'')+'</div>' +
+      '<div class="zoek-item-detail">'+(zoek.brandstof||'-')+' · '+jaren+'</div></div>' +
+      '<span class="badge badge-groen">Actief</span></div>' +
+      '<div class="zoek-item-actions"><button class="btn-sm btn-del" onclick="verwijderZoek(\''+zoek.id+'\')">Verwijderen</button></div></div>';
   }).join('');
 }
 
@@ -377,6 +389,9 @@ function startZoek() {
   var brandstof = document.getElementById('f-brandstof').value;
   var jaarVan = document.getElementById('f-jaar-van').value;
   var jaarTot = document.getElementById('f-jaar-tot').value;
+  var btn = document.getElementById('start-btn');
+  btn.disabled = true;
+  btn.textContent = '🔍 Zoeken gestart...';
   fetch(API + '/api/zoekopdrachten', {
     method: 'POST',
     headers: {'Content-Type': 'application/json'},
@@ -391,11 +406,17 @@ function startZoek() {
   })
   .then(function(r){ return r.json(); })
   .then(function() {
-    alert('Zoekopdracht gestart! De bot scant elk uur voor jou.');
-    laadDashboard();
+    btn.disabled = false;
+    btn.textContent = '🔍 Zoekopdracht starten';
     showTab('resultaten', document.querySelectorAll('.tab')[0]);
+    laadDashboard();
+    startAutoRefresh();
   })
-  .catch(function(){ alert('Er ging iets mis. Probeer opnieuw.'); });
+  .catch(function() {
+    btn.disabled = false;
+    btn.textContent = '🔍 Zoekopdracht starten';
+    alert('Er ging iets mis. Probeer opnieuw.');
+  });
 }
 
 function verwijderZoek(id) {
@@ -429,7 +450,7 @@ function laadHotlist() {
 function renderHotlist(data) {
   var list = document.getElementById('hotlist-list');
   list.innerHTML = data.map(function(item, i) {
-    var rank = i + 1;
+    var rank = i+1;
     var jaarStr = item.bouwjaar_van && item.bouwjaar_tot ? item.bouwjaar_van+'–'+item.bouwjaar_tot : '';
     return '<div class="hot-item" onclick="zoekVanHotlist(\''+item.merk+'\',\''+(item.type_model||'')+'\')">'+
       '<div class="hot-rank'+(rank<=3?' top':'')+'">'+rank+'</div>'+
@@ -455,18 +476,9 @@ function selectPlan(plan) {
   document.getElementById('plan-maand').classList.toggle('selected', plan==='maand');
 }
 
-function betalen() {
-  alert('Mollie betaling wordt binnenkort geactiveerd. Bedrag: '+(gekozenPlan==='dag'?'€1,00':'€15,00'));
-}
-
-function gegevensOpvragen() {
-  alert('Je gegevens worden verstuurd naar: '+huidigEmail);
-}
-
-function bijzonderPlaatsen() {
-  var omschrijving = prompt('Beschrijf de auto die je zoekt (merk, type, bouwjaar, budget):');
-  if (omschrijving) alert('Bijzondere zoekopdracht geplaatst!');
-}
+function betalen() { alert('Mollie betaling wordt binnenkort geactiveerd. Bedrag: '+(gekozenPlan==='dag'?'€1,00':'€15,00')); }
+function gegevensOpvragen() { alert('Je gegevens worden verstuurd naar: '+huidigEmail); }
+function bijzonderPlaatsen() { var o=prompt('Beschrijf de auto die je zoekt:'); if(o)alert('Geplaatst!'); }
 
 vulJaren();
 if (huidigEmail) { toonApp(); }
